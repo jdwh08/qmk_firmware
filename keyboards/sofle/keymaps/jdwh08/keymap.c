@@ -81,7 +81,7 @@ enum custom_keycodes {
     KC_LEND,
     KC_DLINE,
     KC_REDO,  // LCTL(KC_Y)
-    KC_SNIP,  // SGUI(KC_S) // TODO: switch this to SGUI(KC_4) for mac
+    KC_SNIP,  // SGUI(KC_S), SGUI(KC_4) for mac
     KC_PRNT,  // LCTL(KC_P)
     KC_SLAL,  // LCTL(KC_A)
     KC_CNEW,  // LCTL(KC_N)
@@ -247,22 +247,22 @@ static void print_status_narrow(void) {
             oled_write_ln_P(PSTR("QWRTY"), false);
             break;
         default:
-            oled_write_P(PSTR("Undef"), false);
+            oled_write_ln_P(PSTR("Undef"), false);
     }
-    oled_write_ln_P(PSTR("-----"), false);
+    oled_write_ln(PSTR("-----"), false);
     // Print current layer
     switch (get_highest_layer(layer_state)) {
         case _STRDY:
-            oled_write_P(PSTR("Base\n"), false);
+            oled_write_ln_P(PSTR("Base\n"), false);
             break;
         case _RAISE:
-            oled_write_P(PSTR("Raise"), true);
+            oled_write_ln_P(PSTR("Raise"), true);
             break;
         case _EXTND:
-            oled_write_P(PSTR("XTND"), true);
+            oled_write_ln_P(PSTR("XTND\n"), true);
             break;
         case _ADJUST:
-            oled_write_P(PSTR("Adj\n"), true);
+            oled_write_ln_P(PSTR("Adj\n"), true);
             break;
         default:
             oled_write_ln_P(PSTR("Undef"), false);
@@ -900,11 +900,11 @@ uint16_t get_autoshift_timeout(uint16_t keycode, keyrecord_t *record) {
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
           // Mappings for 1st Encoder          // Mappings for 2nd Encoder
-    [0] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // QWERTY
-    [1] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // STRDY
-    [2] = { ENCODER_CCW_CW(KC_WH_L, KC_WH_R),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // Xtnd2
-    [3] = { ENCODER_CCW_CW(KC_ZMIN, KC_ZMOT), ENCODER_CCW_CW(KC_BRID, KC_BRIU) }, // Raise
-    [4] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(KC_WH_D, KC_WH_U) }, // Adj
+    [0] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_U, KC_WH_D)  }, // QWERTY
+    [1] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_U, KC_WH_D)  }, // STRDY
+    [2] = { ENCODER_CCW_CW(KC_WH_R, KC_WH_L),  ENCODER_CCW_CW(KC_WH_U, KC_WH_D)  }, // Xtnd2
+    [3] = { ENCODER_CCW_CW(KC_ZMOT, KC_ZMIN), ENCODER_CCW_CW(KC_BRIU, KC_BRID) }, // Raise
+    [4] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD), ENCODER_CCW_CW(KC_WH_U, KC_WH_D) }, // Adj
     // You can add more layers here if you need them, or you can also delete lines for layers you are not using
 };
 #endif
