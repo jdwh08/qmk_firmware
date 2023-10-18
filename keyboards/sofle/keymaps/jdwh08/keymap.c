@@ -1,12 +1,15 @@
 #include QMK_KEYBOARD_H
 #include "os_detection.h"
+#include "sentence_case.h"
 
 // NOTE: This firmware is too big for the default Atmega32u4/Pro-Micro controller. I'm using RP2040/Elite-Pi.
 // TODO: Make backspace delete both brackets if the prior key was a bracket key?
+// TODO: Make macro for "" (and '?)
 // TODO: Bind Q to QU, register last key to U, and fix anything that this breaks
 
-// TODO: Sentence Case from https://getreuer.info/posts/keyboards/macros/index.html (though change this to use esc to undo the capitalization? w/ https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
-// TODO: Add WPM and Luna https://github.com/HellSingCoder/qmk_firmware/tree/master/keyboards/sofle/keymaps/helltm and BongoCat https://github.com/nwii/oledbongocat
+// TODO: Sentence Case from https://getreuer.info/posts/keyboards/sentence-case/index.html (though change this to use esc to undo the capitalization? w/ https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
+// TODO: Add BongoCat? https://github.com/nwii/oledbongocat
+// TODO: Add dynamic macros https://docs.qmk.fm/#/feature_dynamic_macros
 // TODO: Make deleting () or <> all at once when cursor is inside them.
 
 // BUGS:
@@ -520,20 +523,20 @@ bool caps_word_press_user(uint16_t keycode) {
 // limitations under the License.
 
 enum selwd_states {
-    STATE_NONE,        // No selection.
-    STATE_SELECTED,    // Macro released with something selected.
-    STATE_WORD,        // Macro held with word(s) selected.
-    STATE_FIRST_LINE,  // Macro held with one line selected.
-    STATE_LINE         // Macro held with multiple lines selected.
+    SELWD_STATE_NONE,        // No selection.
+    SELWD_STATE_SELECTED,    // Macro released with something selected.
+    SELWD_STATE_WORD,        // Macro held with word(s) selected.
+    SELWD_STATE_FIRST_LINE,  // Macro held with one line selected.
+    SELWD_STATE_LINE         // Macro held with multiple lines selected.
 };
-static uint8_t selwd_state = STATE_NONE;
+static uint8_t selwd_state = SELWD_STATE_NONE;
 
 // Idle timeout timer to disable Select Word after a period of inactivity.
 #if SELECT_WORD_TIMEOUT > 0
 static uint16_t idle_timer = 0;
 void select_word_task(void) {
     if (selwd_state && timer_expired(timer_read(), idle_timer)) {
-        selwd_state = STATE_NONE;
+        selwd_state = SELWD_STATE_NONE;
     }
 }
 #endif  // SELECT_WORD_TIMEOUT > 0
@@ -568,7 +571,7 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
                 set_mods(MOD_BIT(KC_LCTL));  // Hold Left Ctrl.
                 // set_mods(mod_config(MOD_LCTL));
             }
-            if (selwd_state == STATE_NONE) {
+            if (selwd_state == SELWD_STATE_NONE) {
                 // On first use, tap Ctrl+Right then Ctrl+Left (or with Alt on Mac) to
                 // ensure the cursor is positioned at the beginning of the word.
                 send_keyboard_report();
@@ -577,9 +580,9 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
             }
             register_mods(MOD_BIT(KC_LSFT));
             register_code(KC_RGHT);
-            selwd_state = STATE_WORD;
+            selwd_state = SELWD_STATE_WORD;
         } else {  // Select line.
-            if (selwd_state == STATE_NONE) {
+            if (selwd_state == SELWD_STATE_NONE) {
                 if (keymap_config.swap_lctl_lgui) {
                     // MAC:
                     // Tap GUI (Command) + Left, then Shift + GUI + Right.
@@ -598,10 +601,10 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
                     tap_code(KC_END);
                 }
                 set_mods(mods);
-                selwd_state = STATE_FIRST_LINE;
+                selwd_state = SELWD_STATE_FIRST_LINE;
             } else {
                 register_code(KC_DOWN);
-                selwd_state = STATE_LINE;
+                selwd_state = SELWD_STATE_LINE;
             }
         }
         return false;
@@ -609,7 +612,7 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
 
     // `sel_keycode` was released, or another key was pressed.
     switch (selwd_state) {
-        case STATE_WORD:
+        case SELWD_STATE_WORD:
             unregister_code(KC_RGHT);
             if (keymap_config.swap_lctl_lgui) {
                 unregister_mods(MOD_BIT(KC_LSFT) | MOD_BIT(KC_LALT));
@@ -617,31 +620,352 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
             else {
                 unregister_mods(MOD_BIT(KC_LSFT) | MOD_BIT(KC_LCTL));
             }
-            selwd_state = STATE_SELECTED;
+            selwd_state = SELWD_STATE_SELECTED;
             break;
 
-        case STATE_FIRST_LINE:
-            selwd_state = STATE_SELECTED;
+        case SELWD_STATE_FIRST_LINE:
+            selwd_state = SELWD_STATE_SELECTED;
             break;
 
-        case STATE_LINE:
+        case SELWD_STATE_LINE:
             unregister_code(KC_DOWN);
-            selwd_state = STATE_SELECTED;
+            selwd_state = SELWD_STATE_SELECTED;
             break;
 
-        case STATE_SELECTED:
+        case SELWD_STATE_SELECTED:
             if (keycode == KC_ESC) {
                 tap_code(KC_RGHT);
-                selwd_state = STATE_NONE;
+                selwd_state = SELWD_STATE_NONE;
                 return false;
             }
             // Fallthrough intended.
         default:
-            selwd_state = STATE_NONE;
+            selwd_state = SELWD_STATE_NONE;
     }
 
     return true;
 }
+
+// -------------------------------------------------------------------------
+// SENTENCE CASE
+
+// https://getreuer.info/posts/keyboards/sentence-case/index.html
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+enum sentence_case_state {
+    SNCSE_STATE_INIT,     /**< Initial enabled state. */
+    SNCSE_STATE_WORD,     /**< Within a word. */
+    SNCSE_STATE_ABBREV,   /**< Within an abbreviation like "e.g.". */
+    SNCSE_STATE_ENDING,   /**< Sentence ended. */
+    SNCSE_STATE_PRIMED,   /**< "Primed" state, in the space following an ending. */
+    SNCSE_STATE_DISABLED, /**< Sentence Case is disabled. */
+};
+#if SENTENCE_CASE_TIMEOUT > 0
+static uint16_t idle_timer = 0;
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+#if SENTENCE_CASE_BUFFER_SIZE > 1
+static uint16_t key_buffer[SENTENCE_CASE_BUFFER_SIZE] = {0};
+#endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+static uint8_t state_history[SENTENCE_CASE_STATE_HISTORY_SIZE];
+static uint16_t suppress_key = KC_NO;
+static uint8_t sentence_state = SNCSE_STATE_INIT;
+
+// Sets the current state to `new_state`.
+static void set_sentence_state(uint8_t new_state) {
+#ifndef NO_DEBUG
+    if (debug_enable && sentence_state != new_state) {
+        static const char* state_names[] = {
+            "INIT", "WORD", "ABBREV", "ENDING", "PRIMED", "DISABLED",
+        };
+        dprintf("Sentence case: %s\n", state_names[new_state]);
+    }
+#endif  // NO_DEBUG
+
+    const bool primed = (new_state == SNCSE_STATE_PRIMED);
+    if (primed != (sentence_state == SNCSE_STATE_PRIMED)) {
+        sentence_case_primed(primed);
+    }
+    sentence_state = new_state;
+}
+
+static void clear_state_history(void) {
+#if SENTENCE_CASE_TIMEOUT > 0
+    idle_timer = 0;
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+    memset(state_history, SNCSE_STATE_INIT, sizeof(state_history));
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        set_sentence_state(SNCSE_STATE_INIT);
+    }
+}
+
+void sentence_case_clear(void) {
+    clear_state_history();
+    suppress_key = KC_NO;
+#if SENTENCE_CASE_BUFFER_SIZE > 1
+    memset(key_buffer, 0, sizeof(key_buffer));
+#endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+}
+
+void sentence_case_on(void) {
+    if (sentence_state == SNCSE_STATE_DISABLED) {
+        sentence_state = SNCSE_STATE_INIT;
+        sentence_case_clear();
+    }
+}
+
+void sentence_case_off(void) {
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        set_sentence_state(SNCSE_STATE_DISABLED);
+    }
+}
+
+void sentence_case_toggle(void) {
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        sentence_case_off();
+    } else {
+        sentence_case_on();
+    }
+}
+
+bool is_sentence_case_on(void) { return sentence_state != SNCSE_STATE_DISABLED; }
+
+#if SENTENCE_CASE_TIMEOUT > 0
+#if SENTENCE_CASE_TIMEOUT < 100 || SENTENCE_CASE_TIMEOUT > 30000
+// Constrain timeout to a sensible range. With the 16-bit timer, the longest
+// representable timeout is 32768 ms, rounded here to 30000 ms = half a minute.
+#error "sentence_case: SENTENCE_CASE_TIMEOUT must be between 100 and 30000 ms"
+#endif
+
+void sentence_case_task(void) {
+    if (idle_timer && timer_expired(timer_read(), idle_timer)) {
+        clear_state_history();  // Timed out; clear all state.
+    }
+}
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+
+bool process_sentence_case(uint16_t keycode, keyrecord_t* record) {
+    // Only process while enabled, and only process press events.
+    if (sentence_state == SNCSE_STATE_DISABLED || !record->event.pressed) {
+        return true;
+    }
+
+    #if SENTENCE_CASE_TIMEOUT > 0
+    idle_timer = (record->event.time + SENTENCE_CASE_TIMEOUT) | 1;
+    #endif  // SENTENCE_CASE_TIMEOUT > 0
+
+    switch (keycode) {
+    #ifndef NO_ACTION_TAPPING
+        case QK_MOD_TAP ... QK_MOD_TAP_MAX:
+        if (record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_MOD_TAP_GET_TAP_KEYCODE(keycode);
+        break;
+    #ifndef NO_ACTION_LAYER
+        case QK_LAYER_TAP ... QK_LAYER_TAP_MAX:
+    #endif  // NO_ACTION_LAYER
+        if (record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_LAYER_TAP_GET_TAP_KEYCODE(keycode);
+        break;
+    #endif  // NO_ACTION_TAPPING
+
+    #ifdef SWAP_HANDS_ENABLE
+        case QK_SWAP_HANDS ... QK_SWAP_HANDS_MAX:
+        if (IS_SWAP_HANDS_KEYCODE(keycode) || record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_SWAP_HANDS_GET_TAP_KEYCODE(keycode);
+        break;
+    #endif  // SWAP_HANDS_ENABLE
+    }
+
+    if (keycode == KC_BSPC) {
+        // Backspace key pressed. Rewind the state and key buffers.
+        // BUG: I don't think sentence case will work with control backspace...
+        set_sentence_state(state_history[SENTENCE_CASE_STATE_HISTORY_SIZE - 1]);
+
+        memmove(state_history + 1, state_history, SENTENCE_CASE_STATE_HISTORY_SIZE - 1);
+        state_history[0] = SNCSE_STATE_INIT;
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+        memmove(key_buffer + 1, key_buffer,
+                (SENTENCE_CASE_BUFFER_SIZE - 1) * sizeof(uint16_t));
+        key_buffer[0] = KC_NO;
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+        return true;
+    }
+
+    const uint8_t mods = get_mods() | get_weak_mods() | get_oneshot_mods();
+    uint8_t new_state = SNCSE_STATE_INIT;
+
+    // We search for sentence beginnings using a simple finite state machine. It
+    // matches things like "a. a" and "a.  a" but not "a.. a" or "a.a. a". The
+    // state transition matrix is:
+    //
+    //             'a'       '.'      ' '      '\''
+    //           +-------------------------------------
+    //   INIT    | WORD      INIT     INIT     INIT
+    //   WORD    | WORD      ENDING   INIT     WORD
+    //   ABBREV  | ABBREV    ABBREV   INIT     ABBREV
+    //   ENDING  | ABBREV    INIT     PRIMED   ENDING
+    //   PRIMED  | match!    INIT     PRIMED   PRIMED
+    char code = sentence_case_press_user(keycode, record, mods);
+    dprintf("Sentence Case: code = '%c' (%d)\n", code, (int)code);
+    switch (code) {
+        case '\0':  // Current key should be ignored.
+        return true;
+
+        case 'a':  // Current key is a letter.
+        switch (sentence_state) {
+            case SNCSE_STATE_ABBREV:
+            case SNCSE_STATE_ENDING:
+            new_state = SNCSE_STATE_ABBREV;
+            break;
+
+            case SNCSE_STATE_PRIMED:
+            // This is the start of a sentence.
+            if (keycode != suppress_key) {
+                suppress_key = keycode;
+                set_oneshot_mods(MOD_BIT(KC_LSFT));  // Shift mod to capitalize.
+                new_state = SNCSE_STATE_WORD;
+            }
+            break;
+
+            default:
+            new_state = SNCSE_STATE_WORD;
+        }
+        break;
+
+        case '.':  // Current key is sentence-ending punctuation.
+        switch (sentence_state) {
+            case SNCSE_STATE_WORD:
+            new_state = SNCSE_STATE_ENDING;
+            break;
+
+            default:
+            new_state = SNCSE_STATE_ABBREV;
+        }
+        break;
+
+        case ' ':  // Current key is a space.
+        if (sentence_state == SNCSE_STATE_PRIMED ||
+            (sentence_state == SNCSE_STATE_ENDING
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+            && sentence_case_check_ending(key_buffer)
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+                )) {
+            new_state = SNCSE_STATE_PRIMED;
+            suppress_key = KC_NO;
+        }
+        break;
+
+        case '\'':  // Current key is a quote.
+        new_state = sentence_state;
+        break;
+    }
+
+    // Slide key_buffer and state_history buffers one element to the left.
+    // Optimization note: Using manual loops instead of memmove() here saved
+    // ~100 bytes on AVR.
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    for (int8_t i = 0; i < SENTENCE_CASE_BUFFER_SIZE - 1; ++i) {
+        key_buffer[i] = key_buffer[i + 1];
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+    for (int8_t i = 0; i < SENTENCE_CASE_STATE_HISTORY_SIZE - 1; ++i) {
+        state_history[i] = state_history[i + 1];
+    }
+
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    key_buffer[SENTENCE_CASE_BUFFER_SIZE - 1] = keycode;
+    if (new_state == SNCSE_STATE_ENDING && !sentence_case_check_ending(key_buffer)) {
+        dprintf("Not a real ending.\n");
+        new_state = SNCSE_STATE_INIT;
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+    state_history[SENTENCE_CASE_STATE_HISTORY_SIZE - 1] = sentence_state;
+
+    set_sentence_state(new_state);
+    return true;
+}
+
+bool sentence_case_just_typed_P(const uint16_t* buffer, const uint16_t* pattern,
+                                int8_t pattern_len) {
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    buffer += SENTENCE_CASE_BUFFER_SIZE - pattern_len;
+    for (int8_t i = 0; i < pattern_len; ++i) {
+        if (buffer[i] != pgm_read_word(pattern + i)) {
+        return false;
+        }
+    }
+    return true;
+    #else
+    return false;
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+}
+
+__attribute__((weak)) bool sentence_case_check_ending(const uint16_t* buffer) {
+    #if SENTENCE_CASE_BUFFER_SIZE >= 5
+    // Don't consider the abbreviations "vs." and "etc." to end the sentence.
+    if (SENTENCE_CASE_JUST_TYPED(KC_SPC, KC_V, KC_S, KC_DOT) ||
+        SENTENCE_CASE_JUST_TYPED(KC_SPC, KC_E, KC_T, KC_C, KC_DOT)) {
+        return false;  // Not a real sentence ending.
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE >= 5
+    return true;  // Real sentence ending; capitalize next letter.
+}
+
+__attribute__((weak)) char sentence_case_press_user(uint16_t keycode,
+                                                    keyrecord_t* record,
+                                                    uint8_t mods) {
+    if ((mods & ~(MOD_MASK_SHIFT | MOD_BIT(KC_RALT))) == 0) {
+        const bool shifted = mods & MOD_MASK_SHIFT;
+        switch (keycode) {
+        case KC_LCTL ... KC_RGUI:  // Mod keys.
+            return '\0';  // These keys are ignored.
+
+        case KC_A ... KC_Z:
+            return 'a';  // Letter key.
+
+        case KC_DOT:  // . is punctuation, Shift . is a symbol (>)
+            return !shifted ? '.' : '#';
+        case KC_1:
+        case KC_SLSH:
+            return shifted ? '.' : '#';
+        case KC_2 ... KC_0:  // 2 3 4 5 6 7 8 9 0
+        case KC_MINS ... KC_SCLN:  // - = [ ] ; backslash
+        case KC_GRV:
+        case KC_COMM:
+            return '#';  // Symbol key.
+
+        case KC_SPC:
+            return ' ';  // Space key.
+
+        case KC_QUOT:
+            return '\'';  // Quote key.
+        }
+    }
+
+    // Otherwise clear Sentence Case to initial state.
+    sentence_case_clear();
+    return '\0';
+}
+
+__attribute__((weak)) void sentence_case_primed(bool primed) {}
 
 // -------------------------------------------------------------------------
 // MAGIC KEY
@@ -880,6 +1204,9 @@ static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
 // PROCESSING
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // MACROS OVERWRITING BEHAVIOUR:
+    // Sentence Case
+    if (!process_sentence_case(keycode, record)) { return false; }
+
     // Select Word
     if (!process_select_word(keycode, record, KC_SLWD)) { return false; }
 
@@ -1110,10 +1437,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // Delete both brackets when backspacing afterwards
                 switch (get_last_keycode()) {
                     case KC_9PRC:
+                    case KC_LPRN:
                     case KC_CANG:
+                    case KC_LABK:
                     case KC_CBRC:
                     case KC_SBRC:
                         register_code(KC_DEL);
+                        unregister_code(KC_DEL);
                 }
                 return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
                 return false;
@@ -1366,14 +1696,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
             // Tap Hold
             case C_BKSP:
-                switch (get_last_keycode()) {
-                    case KC_9PRC:
-                    case KC_CANG:
-                    case KC_CBRC:
-                    case KC_SBRC:
-                        // unregister delete trailing parenthesis
-                        unregister_code(KC_DEL);
-                }
                 return false;
                 break;
             // Browser search Tap Hold
@@ -1414,7 +1736,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [0] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // QWERTY
     [1] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // STRDY
     [2] = { ENCODER_CCW_CW(KC_WH_R, KC_WH_L),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // Xtnd2
-    [3] = { ENCODER_CCW_CW(KC_REDO, KC_UNDO), ENCODER_CCW_CW(KC_PRVWD, KC_NXTWD) }, // Raise
+    [3] = { ENCODER_CCW_CW(KC_REDO, KC_UNDO), ENCODER_CCW_CW(KC_NXTWD, KC_PRVWD) }, // Raise
     [4] = { ENCODER_CCW_CW(KC_ZMOT, KC_ZMIN), ENCODER_CCW_CW(KC_BRIU, KC_BRID) }, // Adj
     // You can add more layers here if you need them, or you can also delete lines for layers you are not using
 };
@@ -1603,27 +1925,28 @@ static void print_status_narrow(void) {
     // Print current layer
     switch (get_highest_layer(layer_state)) {
         case _STRDY:
-            oled_write_ln_P(PSTR("Base\n"), false);
+            oled_write_P(PSTR("Base "), false);
             break;
         case _RAISE:
-            oled_write_ln_P(PSTR("Raise"), true);
+            oled_write_P(PSTR("Raise"), true);
             break;
         case _EXTND:
-            oled_write_ln_P(PSTR("Xtnd2"), true);
+            oled_write_P(PSTR("Xtnd2"), true);
             break;
         case _ADJUST:
-            oled_write_ln_P(PSTR("Adjst"), true);
+            oled_write_P(PSTR("Adjst"), true);
             break;
         default:
-            oled_write_ln_P(PSTR("uNDEf"), true);
+            oled_write_P(PSTR("uNDEf"), true);
     }
     oled_write_P(PSTR("-----"), false);
     // Statuses: Autocorrect, AltTab, CapsWord
     oled_write_P(PSTR("ACORR"), autocorrect_is_enabled());  // autocorrect
     oled_write_P(PSTR("ALTAB"), is_alt_tab_active);  // alt-tab
     oled_write_P(PSTR("CAPWD"), is_caps_word_on());  // caps word
-    oled_write_P(PSTR("SELWD"), selwd_state != STATE_NONE); // select word
-
+    oled_write_P(PSTR("SELWD"), selwd_state != SELWD_STATE_NONE); // select word
+    oled_write_P(PSTR("SNCSE"), sentence_state == SNCSE_STATE_ENDING || sentence_state == SNCSE_STATE_PRIMED); // sentence case
+    oled_write_P(PSTR("-----"), false);
     // QMK
     // render_logo();  // TODO: Get a better logo.
     render_luna(0, 13);
