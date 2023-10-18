@@ -13,7 +13,9 @@
 // TODO: Make deleting () or <> all at once when cursor is inside them.
 
 // BUGS:
-// Browser search button is busted (typing insert)
+// Browser search button is busted slightly.
+// Sentence case disables capsword.
+// Backspace button will not undo backspace.
 
 // ---------------------------------------------------------------------------------------------------
 // States used in multiple functions
@@ -279,9 +281,9 @@ static bool process_tap_or_long_press_key(
         if (record->event.pressed) {
             set_last_keycode(long_press_keycode);
             // BUGFIX: will this allow me to process keys within keys?
-            // tap_code16(long_press_keycode);
-            register_code16(long_press_keycode);
-            unregister_code16(long_press_keycode);
+            tap_code16(long_press_keycode);
+            // register_code16(long_press_keycode);
+            // unregister_code16(long_press_keycode);
         }
         return false;  // Skip default handling.
     }
@@ -1445,6 +1447,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         register_code(KC_DEL);
                         unregister_code(KC_DEL);
                 }
+
                 return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
                 return false;
                 break;
@@ -1696,7 +1699,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
             // Tap Hold
             case C_BKSP:
-                return false;
+                return true;  // THIS MUST BE TRUE OTHERWISE SHORT BACKSPACE WON'T STOP
                 break;
             // Browser search Tap Hold
             // case KC_SRCH:
