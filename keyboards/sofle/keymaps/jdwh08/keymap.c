@@ -3,19 +3,18 @@
 #include "sentence_case.h"
 
 // NOTE: This firmware is too big for the default Atmega32u4/Pro-Micro controller. I'm using RP2040/Elite-Pi.
-// TODO: Make backspace delete both brackets if the prior key was a bracket key?
 // TODO: Make macro for "" (and '?)
 // TODO: Bind Q to QU, register last key to U, and fix anything that this breaks
 
-// TODO: Sentence Case from https://getreuer.info/posts/keyboards/sentence-case/index.html (though change this to use esc to undo the capitalization? w/ https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
+// TODO: Change sentence case to use backspace to undo the capitalization? w/ (https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
 // TODO: Add BongoCat? https://github.com/nwii/oledbongocat
 // TODO: Add dynamic macros https://docs.qmk.fm/#/feature_dynamic_macros
 // TODO: Make deleting () or <> all at once when cursor is inside them.
 
 // BUGS:
-// Browser search button is busted slightly.
+// Browser search button is busted slightly (?)
 // Sentence case disables capsword.
-// Backspace button will not undo backspace.
+// Backspace won't delete the pair for any keys that type matched pairs (), <>, [], {}, ""
 
 // ---------------------------------------------------------------------------------------------------
 // States used in multiple functions
@@ -55,6 +54,7 @@ enum custom_keycodes {
     KC_CBRC,  // type {} {curlybracket}
     KC_CANG,  // type , or <> if shifted
     // C_LANGB,  // helper for < macro
+    KC_DQOT,  // type ""
 
     // New phrases for magic layer
     UPDIR,  // ../
@@ -140,16 +140,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|  MUTE |    |       |------+------+------+------+------+------|
  * |LShift|   Z  |   X  |   C  |   V  |   B  |-------|    |-------|   N  |   M  |   ,  |   .  |   ;  |  =   |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI |EXTND2| LCTR |Enter | /Space  /       \Bkspc \  |RAISE | RCTR | RAlt | Caps |
+ *            | LGUI | LCTR |EXTND2|Enter | /Space  /       \Bkspc \  |REPEAT|RAISE | RAlt | Caps |
  *            |      |      |      |LFUNC |/       /         \      \ |      |      |      | Word |
  *            `----------------------------------'            '------''---------------------------'
  */
 [_QWERTY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                     KC_6,    KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_QUOT,
+  KC_GRV,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_DQOT,
   KC_TAB,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_BSLS,  KC_SLSH,
   KC_LSFT,   KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, KC_MUTE,KC_MEDIA_PLAY_PAUSE,KC_N,    KC_M,  KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-                 KC_LGUI, TT(_EXTND),KC_LCTL, KC_ENT, KC_SPC,                   C_BKSP, QK_REP, KC_RALT, TT(_RAISE), CW_TOGG
+                KC_LGUI, KC_LCTL, TT(_EXTND), KC_ENT, KC_SPC,                   C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /*
  * STRDY
@@ -162,17 +162,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |LShift|   X  |   K  |   J  |   G  |   W  |-------|    |-------|   Z  |   H  |   ,  |   .  |   ;  |  +   |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI |EXTND2| LCTR |Enter | /Space  /       \Bkspc \  |REPEAT| RAlt |RAISE | Caps |
- *            |      |Layer |      |      |/       /         \      \ |      |      |Layer | Word |
+ *            | LGUI | LCTR |EXTND2|Enter | /Space  /       \Bkspc \  |REPEAT|RAISE | RAlt | Caps |
+ *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
  *            `----------------------------------'           '------''---------------------------'
  */
 
 [_STRDY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,    KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC,    KC_U,    KC_O,    KC_Q,  KC_QUOT,
+  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC,    KC_U,    KC_O,    KC_Q,  KC_DQOT,
   KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,    KC_N,    KC_E,    KC_A,    KC_I,  KC_SLSH,
   KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,    KC_H, KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-    KC_LGUI,TT(_EXTND),KC_LCTL, KC_ENT, KC_SPC,                    C_BKSP, QK_REP, KC_RALT, TT(_RAISE), CW_TOGG
+    KC_LGUI,KC_LCTL,TT(_EXTND),KC_ENT, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -184,8 +184,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |LShift| Undo | Cut  | Copy | Paste| Redo |-------|    |-------|SlctAl|C(New)|   ,  |   .  |   ;  |   +  |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |REPEAT| RAlt |ADJUST| Caps |
- *            |      |      |      |      |/       /         \      \ |      |      |Layer | Word |
+ *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |REPEAT|ADJUST| RAlt | Caps |
+ *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
  *            `----------------------------------'           '------''---------------------------'
  */
 [_EXTND] = LAYOUT(
@@ -206,8 +206,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |LShift| Undo |  Cut | Copy | Paste|      |-------|    |-------|      | LStr |      | LEnd |      | Shift|
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI |ADJUST| LCTR |Enter | /Space  /       \Bkspc \  |Repeat| Ralt |      | Caps |
- *            |      |Layer |      |      |/       /         \      \ |      |      |      | Word |
+ *            | LGUI |ADJUST| LCTR |Enter | /Space  /       \Bkspc \  |Repeat|      | RAlt | Caps |
+ *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
  *            `----------------------------------'           '------''---------------------------'
  */
 [_RAISE] = LAYOUT(
@@ -227,7 +227,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |      |      |      |      |      |      |-------|    |-------|      | PREV | PLAY | NEXT |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI | LAlt | LCTR |LOWER | /Space  /       \Bkspc \  |RAISE | RCTR | RAlt | Caps |
+ *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |Repeat|      | RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
  *            `----------------------------------'           '------''---------------------------'
  */
@@ -242,6 +242,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // ----------------------------------------------------------------------
 // OS DETECTION HANDLING
+// https://docs.qmk.fm/#/feature_os_detection
 bool hasos = false;
 os_variant_t hostos;
 static void get_os(void) {
@@ -266,6 +267,7 @@ bool is_alt_tab_active = false;
 uint16_t alt_tab_timer = 0;
 // ----------------------------------------------------------------------
 // Tap Hold: Tap vs Long-Press Processing
+// https://getreuer.info/posts/keyboards/triggers/index.html#tap-vs.-long-press
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case C_BKSP:  // custom backspace
@@ -380,6 +382,8 @@ bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
             return true;
         case KC_CANG:  // , and < but < should activate a bracket macro
             return true;
+        case KC_DQOT:  // ' and " but " should activate a double quote macro ""
+            return true;
         default:
             return false;
     }
@@ -418,6 +422,18 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
                 set_last_keycode(KC_LABK);
             }
             break;
+        case KC_DQOT:
+            if (!shifted) {
+                register_code16(KC_QUOT);
+            }
+            else {
+                clear_oneshot_mods();  // Temporarily disable mods.
+                unregister_mods(MOD_MASK_CSAG);
+                SEND_STRING("\"\"");
+                tap_code(KC_LEFT);  // move cursor back into ""
+                set_last_keycode(KC_DQOT);
+            }
+            break;
         default:
             if (shifted) {
                 add_weak_mods(MOD_BIT(KC_LSFT));
@@ -434,11 +450,21 @@ void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record)
             }
             else {
                 register_mods(get_mods());
+                set_last_keycode(KC_9PRC);
             }
             break;
         case KC_CANG:
             if (!shifted) {
                 unregister_code16(KC_COMM);
+            }
+            else {
+                register_mods(get_mods());
+                set_last_keycode(KC_LABK);
+            }
+            break;
+        case KC_DQOT:
+            if (!shifted) {
+                unregister_code16(KC_QUOT);
             }
             else {
                 register_mods(get_mods());
@@ -959,6 +985,8 @@ __attribute__((weak)) char sentence_case_press_user(uint16_t keycode,
 
         case KC_QUOT:
             return '\'';  // Quote key.
+        case KC_DQOT:
+            return '\'';  // Quote key alternate
         }
     }
 
@@ -1006,6 +1034,12 @@ uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
         case KC_EQL: return M_EQEQ;     // = -> ==
         case KC_HASH: return M_INCLUDE; // # -> include
         case KC_QUOT:
+            // Shouldn't happen because of auto shift but...
+            if ((mods & MOD_MASK_SHIFT) != 0) {
+            return M_DOCSTR;  // " -> ""<cursor>"""
+            }
+            return KC_NO;
+        case KC_DQOT:
             if ((mods & MOD_MASK_SHIFT) != 0) {
             return M_DOCSTR;  // " -> ""<cursor>"""
             }
@@ -1389,6 +1423,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // Type {} and put cursor in middle
                 MAGIC_STRING("{}", KC_CBRC);  // send {} with { as repeat
                 tap_code(KC_LEFT);
+                set_last_keycode(KC_CBRC);
                 return false;
                 break;
             case KC_SBRC:
@@ -1396,7 +1431,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // Shifting handled by autoshift.
                 MAGIC_STRING("[]", KC_SBRC);  // send <> with < as repeat
                 tap_code(KC_LEFT);
+                set_last_keycode(KC_SBRC);
                 return false;
+                break;
+            case KC_9PRC:
+                set_last_keycode(KC_9PRC);
+                return true;
+                break;
+            case KC_CANG:
+                set_last_keycode(KC_CANG);
+                return true;
                 break;
 
             // customized snipping tool macro
@@ -1444,8 +1488,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     case KC_LABK:
                     case KC_CBRC:
                     case KC_SBRC:
-                        register_code(KC_DEL);
-                        unregister_code(KC_DEL);
+                        tap_code(KC_DEL);
                 }
 
                 return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press

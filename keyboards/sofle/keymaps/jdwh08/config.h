@@ -41,6 +41,11 @@ for more options.
 #define CAPS_WORD_INVERT_ON_SHIFT true  // shift reverses caps
 
 // ------------------------------------------------------------------------------------------------
+// Previous Key Behaviour
+#define PREVKEY_TIMEOUT_MS 5000  // Timeout in milliseconds.
+#define PREVKEY_RECENT_SIZE 8   // Number of keys in `recent` buffer.
+
+// ------------------------------------------------------------------------------------------------
 // Sentence Case
 #define SENTENCE_CASE_BUFFER_SIZE 8
 #define SENTENCE_CASE_STATE_HISTORY_SIZE 6
