@@ -55,3 +55,9 @@ for more options.
 // WPM Calculation
 #define WPM_ALLOW_COUNT_REGRESSION  // factor backspace
 #define WPM_LAUNCH_CONTROL  // calculate wpm only during typing
+
+// ------------------------------------------------------------------------------------------------
+// Split Keyboard
+// #define SPLIT_KEYBOARD = yes
+// #define MASTER_LEFT
+#define SPLIT_WPM_ENABLE
