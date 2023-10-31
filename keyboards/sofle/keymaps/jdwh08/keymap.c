@@ -11,6 +11,10 @@
 // TODO: Add BongoCat? https://github.com/nwii/oledbongocat
 // TODO: Add dynamic macros https://docs.qmk.fm/#/feature_dynamic_macros
 // TODO: Make deleting () or <> all at once when cursor is inside them.
+// TODO: Add Steno
+// TODO: Add button for control-alt-del
+
+// TODO: Add alternatives for alt repeat key with the quad function tap dance (https://docs.qmk.fm/#/feature_tap_dance)
 
 // BUGS:
 // Browser search button is busted slightly (?)
@@ -77,6 +81,7 @@ enum custom_keycodes {
 // Tap Hold: Custom Keys
 #define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
 #define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
+#define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
 
 // ----------------------------------------------------------
 // MAGIC KEY: Blob of info
@@ -116,7 +121,7 @@ enum custom_keycodes {
 //     < -   -> <-              (Haskell code)
 //     . *   -> ../             (shell)
 //     . * @ -> ../../
-#define C_MAGIC QK_AREP
+#define C_MAGIC QK_AREP // LT(0, QK_AREP)  // magic layer
 
 // ----------------------------------------------------------------------
 // LAYERS
@@ -148,51 +153,51 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_QWERTY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                     KC_6,    KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_DQOT,
-  KC_TAB,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_BSLS,  KC_SLSH,
+  KC_GRV,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_SLSH,
+  KC_TAB,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_BSLS,  KC_DQOT,
   KC_LSFT,   KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, KC_MUTE,KC_MEDIA_PLAY_PAUSE,KC_N,    KC_M,  KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-                KC_LGUI, KC_LCTL, TT(_EXTND), KC_ENT, KC_SPC,                   C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
+                KC_LGUI, KC_LCTL, TT(_EXTND), C_ENTR, KC_SPC,                   C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /*
  * STRDY
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | ESC  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |  -   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |  `   |   V  |   M  |   L  |   C  |   P  |                    |   B  | MAGIC|   U  |   O  |   Q  |  '   |
+ * |  `   |   V  |   M  |   L  |   C  |   P  |                    |   B  | MAGIC|   U  |   O  |   Q  |  /   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |   S  |   T  |   R  |   D  |   Y  |-------.    ,-------|   F  |   N  |   E  |   A  |   I  |  /   |
+ * | Tab  |   S  |   T  |   R  |   D  |   Y  |-------.    ,-------|   F  |   N  |   E  |   A  |   I  |  '   |
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |LShift|   X  |   K  |   J  |   G  |   W  |-------|    |-------|   Z  |   H  |   ,  |   .  |   ;  |  +   |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI | LCTR |EXTND2|Enter | /Space  /       \Bkspc \  |REPEAT|RAISE | RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
- *            `----------------------------------'           '------''---------------------------'
+ *            `----------------------------------'            '------''---------------------------'
  */
 
 [_STRDY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,    KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC,    KC_U,    KC_O,    KC_Q,  KC_DQOT,
-  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,    KC_N,    KC_E,    KC_A,    KC_I,  KC_SLSH,
+  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
+  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,    KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
   KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,    KC_H, KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-    KC_LGUI,KC_LCTL,TT(_EXTND),KC_ENT, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
+    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |xBASEx|  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
+ * |xBASEx|  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | `ESC |Print |BSrcSl|Close |Refrsh|  {   |                    | Snip | MAGIC|PrvWd |UpArrw| NxtWd| F12  |
+ * | `ESC |Print |BSrcSl|Close |Refrsh|  {   |                    | Snip | MAGIC|PrvWd |UpArrw| NxtWd|   /  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  | Save |SrchSl| Del  |Selwrd|  [   |-------.    ,-------| Find |AltTab|LArrw |DnArrw| RArrw|   /  |
+ * | Tab  | Save |SrchSl| Del  |Selwrd|  [   |-------.    ,-------| Find |AltTab|LArrw |DnArrw| RArrw|   '  |
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
  * |LShift| Undo | Cut  | Copy | Paste| Redo |-------|    |-------|SlctAl|C(New)|   ,  |   .  |   ;  |   +  |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |REPEAT|ADJUST| RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
- *            `----------------------------------'           '------''---------------------------'
+ *            `----------------------------------'            '------''---------------------------'
  */
 [_EXTND] = LAYOUT(
-  TG(_EXTND),  KC_F1,   KC_F2,     KC_F3,       KC_F4,     KC_F5,                       KC_F6,      KC_F7,    KC_F8,   KC_F9,   KC_F10,   KC_F11,
-  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_CBRC,                     KC_SNIP,    _______, KC_PRVWD,   KC_UP, KC_NXTWD,   KC_F12,
+  TG(_EXTND),  KC_F1,   KC_F2,     KC_F3,       KC_F4,     KC_F5,                       KC_F6,      KC_F7,    KC_F8,   KC_F9,   KC_F10,   KC_F12,
+  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_CBRC,                     KC_SNIP,    _______, KC_PRVWD,   KC_UP, KC_NXTWD,  _______,
   _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,   KC_SBRC,                     KC_FIND,    KC_ATAB,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
   _______,   KC_UNDO,   KC_CUT,  KC_COPY,    KC_PASTE,   KC_REDO, _______,   _______, KC_SLAL,    KC_CNEW,  _______, _______,  _______,  _______,
                     _______, _______, _______, _______, _______,                       _______, _______, _______, _______, _______
@@ -210,7 +215,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI |ADJUST| LCTR |Enter | /Space  /       \Bkspc \  |Repeat|      | RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
- *            `----------------------------------'           '------''---------------------------'
+ *            `----------------------------------'            '------''---------------------------'
  */
 [_RAISE] = LAYOUT(
   TG(_RAISE), _______ , _______ , _______ , _______ , _______,                   _______,  _______  , _______,  _______ ,  _______ ,_______,
@@ -231,7 +236,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |Repeat|      | RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
- *            `----------------------------------'           '------''---------------------------'
+ *            `----------------------------------'            '------''---------------------------'
  */
   [_ADJUST] = LAYOUT(
   TO(_STRDY) , XXXXXXX,  XXXXXXX ,  XXXXXXX , XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
@@ -295,16 +300,16 @@ static bool process_tap_or_long_press_key(
 }
 // ----------------------------------------------------------------------
 // AUTOCORRECT
-#ifdef AUTOCORRECT_ENABLE
-bool apply_autocorrect(uint8_t backspaces, const char* str,
-                       char* typo, char* correct) {
-    for (uint8_t i = 0; i < backspaces; ++i) {
-        tap_code(KC_BSPC);
-    }
-    send_string_with_delay_P(str, TAP_CODE_DELAY);
-    return false;
-}
-#endif  // AUTOCORRECT_ENABLE
+// #ifdef AUTOCORRECT_ENABLE
+// bool apply_autocorrect(uint8_t backspaces, const char* str,
+//                        char* typo, char* correct) {
+//     for (uint8_t i = 0; i < backspaces; ++i) {
+//         tap_code(KC_BSPC);
+//     }
+//     send_string_with_delay_P(str, TAP_CODE_DELAY);
+//     return false;
+// }
+// #endif  // AUTOCORRECT_ENABLE
 // ----------------------------------------------------------------------
 // AUTO SHIFT
 // Prevent repeating for these characters:
@@ -503,6 +508,8 @@ bool caps_word_press_user(uint16_t keycode) {
         case KC_UNDS:
         case C_MAGIC:
         case QK_REP:
+        case KC_ENT:
+        case C_ENTR:
         // These magic patterns work with Caps Word.
         case M_ION:
         case M_MENT:
@@ -1241,6 +1248,7 @@ static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
 // ------------------------------------------------------------------
 // PROCESSING
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+
     // MACROS OVERWRITING BEHAVIOUR:
     // Sentence Case
     if (!process_sentence_case(keycode, record)) { return false; }
@@ -1496,6 +1504,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
                 return false;
                 break;
+            case C_ENTR:
+                return process_tap_or_long_press_key(record, LCTL(KC_ENT));  // on long press, control enter
             case C_SRCH:
                 // Custom search
                 return process_tap_or_long_press_key(record, KC_SRCHB);  // on long press, open browser before searching
@@ -1756,7 +1766,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 break;
         }
     }
-    return true;
+    
+    // Autocorrect
+    return process_autocorrect(keycode, record);
 }
 // -------------------------------------------------------
 // MATRIX SCAN
@@ -1962,7 +1974,7 @@ char wpm_str[10];
 // #define PREP_FRAMES 1 // uncomment if >1
 
 #    define BCAT_TAP_FRAMES 2
-#    define BCAT_TAP_SPEED 40  // above this wpm value typing animation to trigger
+#    define BCAT_TAP_SPEED 30  // above this wpm value typing animation to trigger
 
 #    define BCAT_ANIM_FRAME_DURATION 200  // how long each frame lasts in ms
 // #define BCAT_SLEEP_TIMER 60000 // should sleep after this period of 0 wpm, needs fixing
