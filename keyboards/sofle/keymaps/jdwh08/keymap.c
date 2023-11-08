@@ -219,10 +219,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_STRDY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC3,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
+  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B,  QK_AREP,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
   KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,     KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
   KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_H, KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, PB_2, TT(_RAISE), KC_RALT, CW_TOGG
+    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -557,8 +557,8 @@ bool caps_word_press_user(uint16_t keycode) {
         case KC_UNDS:
         case QK_AREP:
         case QK_REP:
-        case PB_1:
-        case PB_2:
+        // case PB_1:
+        // case PB_2:
         case C_MAGIC:
         case C_MAGIC2:
         case C_MAGIC3:
@@ -1435,73 +1435,73 @@ bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
 // };
 
 ///////////////////////////////////////////////////////////////////////////
-// MAGIC COMBOS
-enum combos {
-    MAGIC_TAP_C,
-    MAGIC_HOLD_C,
-    REP_TAP_C,
-    MAGIC_REP_TAP_C,
-    MAGIC_REP_HOLD_C,
-};
+// // MAGIC COMBOS
+// enum combos {
+//     MAGIC_TAP_C,
+//     MAGIC_HOLD_C,
+//     REP_TAP_C,
+//     MAGIC_REP_TAP_C,
+//     MAGIC_REP_HOLD_C,
+// };
 
-const uint16_t PROGMEM magic_tap[] = {PB_1, COMBO_END};
-const uint16_t PROGMEM magic_hold[] = {PB_1, COMBO_END};
-// const uint16_t PROGMEM magic_twotap[] = {QK_AREP, C_MAGIC, COMBO_END};
-// const uint16_t PROGMEM magic_twohold[] = {QK_AREP, C_MAGIC, COMBO_END};
-const uint16_t PROGMEM rep_tap[] = {PB_2, COMBO_END};
-// const uint16_t PROGMEM rep_hold[] = {PB_2, COMBO_END};
-const uint16_t PROGMEM magic_rep_tap[] = {PB_1, PB_2, COMBO_END};
-const uint16_t PROGMEM magic_rep_hold[] = {PB_1, PB_2, COMBO_END};
+// const uint16_t PROGMEM magic_tap[] = {PB_1, COMBO_END};
+// const uint16_t PROGMEM magic_hold[] = {PB_1, COMBO_END};
+// // const uint16_t PROGMEM magic_twotap[] = {QK_AREP, C_MAGIC, COMBO_END};
+// // const uint16_t PROGMEM magic_twohold[] = {QK_AREP, C_MAGIC, COMBO_END};
+// const uint16_t PROGMEM rep_tap[] = {PB_2, COMBO_END};
+// // const uint16_t PROGMEM rep_hold[] = {PB_2, COMBO_END};
+// const uint16_t PROGMEM magic_rep_tap[] = {PB_1, PB_2, COMBO_END};
+// const uint16_t PROGMEM magic_rep_hold[] = {PB_1, PB_2, COMBO_END};
 
-combo_t key_combos[] = {
-    [REP_TAP_C] = COMBO(rep_tap, QK_REP),
-    [MAGIC_TAP_C] = COMBO(magic_tap, QK_AREP),
-    [MAGIC_HOLD_C] = COMBO(magic_hold, C_MAGIC2),
-    [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, C_MAGIC3),
-    [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, C_MAGIC4)
-};
+// combo_t key_combos[] = {
+//     [REP_TAP_C] = COMBO(rep_tap, QK_REP),
+//     [MAGIC_TAP_C] = COMBO(magic_tap, QK_AREP),
+//     [MAGIC_HOLD_C] = COMBO(magic_hold, C_MAGIC2),
+//     [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, C_MAGIC3),
+//     [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, C_MAGIC4)
+// };
 
-bool get_combo_must_tap(uint16_t index, combo_t *combo) {
-    switch (index) {
-        case MAGIC_TAP_C:  // fallthrough intended obvs
-        case REP_TAP_C:
-        case MAGIC_REP_TAP_C:
-            return true;
-    }
-    return false;
-};
-
-bool get_combo_must_hold(uint16_t index, combo_t *combo) {
-    switch (index) {
-        case MAGIC_HOLD_C:  // fallthrough intended obvs
-        case MAGIC_REP_HOLD_C:
-            return true;
-    }
-    return false;
-}
-
-bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
-    return false;
-}
-
-// void process_combo_event(uint16_t combo_index, bool pressed) {
-//     int rep_keycode = get_alt_repeat_key_keycode();
-//     int rep_mods = get_last_mods();
-    
-//     switch(combo_index) {
+// bool get_combo_must_tap(uint16_t index, combo_t *combo) {
+//     switch (index) {
+//         case MAGIC_TAP_C:  // fallthrough intended obvs
+//         case REP_TAP_C:
 //         case MAGIC_REP_TAP_C:
-//             if (pressed) {
-//                 register_code16(QK_AREP);
-//                 SS_DELAY(200);
-//                 unregister_code16(QK_AREP);
-//             }
-//             break;
-//         case MAGIC_REP_HOLD_C:
-//             if (pressed) {
-//                 process_magic_key_2(rep_keycode, rep_mods);
-//             }
+//             return true;
 //     }
+//     return false;
+// };
+
+// bool get_combo_must_hold(uint16_t index, combo_t *combo) {
+//     switch (index) {
+//         case MAGIC_HOLD_C:  // fallthrough intended obvs
+//         case MAGIC_REP_HOLD_C:
+//             return true;
+//     }
+//     return false;
 // }
+
+// bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
+//     return false;
+// }
+
+// // void process_combo_event(uint16_t combo_index, bool pressed) {
+// //     int rep_keycode = get_alt_repeat_key_keycode();
+// //     int rep_mods = get_last_mods();
+    
+// //     switch(combo_index) {
+// //         case MAGIC_REP_TAP_C:
+// //             if (pressed) {
+// //                 register_code16(QK_AREP);
+// //                 SS_DELAY(200);
+// //                 unregister_code16(QK_AREP);
+// //             }
+// //             break;
+// //         case MAGIC_REP_HOLD_C:
+// //             if (pressed) {
+// //                 process_magic_key_2(rep_keycode, rep_mods);
+// //             }
+// //     }
+// // }
 
 // ------------------------------------------------------------------
 // PROCESSING

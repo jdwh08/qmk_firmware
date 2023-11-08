@@ -41,7 +41,7 @@ for more options.
 #define CAPS_WORD_INVERT_ON_SHIFT true  // shift reverses caps
 
 // Combos
-#define COMBO_HOLD_TERM 150
+// #define COMBO_HOLD_TERM 150
 
 // ------------------------------------------------------------------------------------------------
 // Previous Key Behaviour
