@@ -2,25 +2,29 @@
 #include "os_detection.h"
 #include "sentence_case.h"
 
-// #include <stdio.h> // needed for bongo cat
-
 // NOTE: This firmware is too big for the default Atmega32u4/Pro-Micro controller. I'm using RP2040/Elite-Pi.
 // TODO: Bind Q to QU, register last key to U, and fix anything that this breaks
 
-// TODO: Change sentence case to use backspace to undo the capitalization? w/ (https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
-// TODO: Add BongoCat? https://github.com/nwii/oledbongocat
+// TODO:? Change sentence case to use backspace to undo the capitalization? w/ (https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
 // TODO: Add dynamic macros https://docs.qmk.fm/#/feature_dynamic_macros
-// TODO: Make deleting () or <> all at once when cursor is inside them.
 // TODO: Add Steno
 // TODO: Add button for control-alt-del
 
 // TODO: Add alternatives for alt repeat key with the quad function tap dance (https://docs.qmk.fm/#/feature_tap_dance)
+// TODO: Add button to switch between tabs in same window (control tab) for H
+// TODO: Holding down U/Q in the EXTND layer should jump to start and end of line.
+// TODO: Mouse jiggler? https://github.com/DIYCharles/MouseJiggler
+// TODO: Mouse cursor layer on RAISE VMLSTR? https://docs.qmk.fm/#/feature_mouse_keys
+// TODO: Lock? https://docs.qmk.fm/#/feature_secure
+// TODO: Aussie/Cursive/ZALGO/etc. https://github.com/drashna/qmk_userspace/blob/04579e566c5b038c2027a1def733b870f532f11a/users/drashna/keyrecords/unicode.c#L4
+
+// TODO: Swap the *NH row to be H*N? (empahsize the magic)
+
+// TODO: Implement magic on 2+ keys: https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys
 
 // BUGS:
-// Browser search button is busted slightly (?)
 // Sentence case disables capsword.
 // Backspace won't delete the pair for any keys that type matched pairs (), <>, [], {}, ""
-// Autocorrect doesn't work
 
 // ---------------------------------------------------------------------------------------------------
 // States used in multiple functions
@@ -30,6 +34,11 @@
 enum custom_keycodes {
     KC_STRDY = SAFE_RANGE,  // to STRDY
     KC_QWERTY,  // to qwerty
+
+    C_MAGIC,  // HYPERMAGIC KEY(!), L1 (tap)
+    C_MAGIC2, // HYPERMAGIC KEY(!), L2 (hold)
+    C_MAGIC3, // HYPERMAGIC KEY(!), L3 (2tap)
+    C_MAGIC4, // HYPERMAGIC KEY(!), L4 (2hold)
 
     KC_PRVWD, // prevword
     KC_NXTWD, // next word
@@ -62,19 +71,24 @@ enum custom_keycodes {
     // C_LANGB,  // helper for < macro
     KC_DQOT,  // type ""
 
-    // New phrases for magic layer
+    ///////////////////////////////////////////////////////////////
+    // New phrases for Magic Key Layer 1
+    // NOTE: we can't do this for other magic keys, just default tap
     UPDIR,  // ../
-    M_ION,
-    M_NION,
-    M_MENT,
-    M_QUEN,
-    M_TMENT,
-    M_THE,
     M_UPDIR,
     M_INCLUDE,
     M_DOCSTR,
     M_MKGRVS,
     M_EQEQ,
+    M_fOR,
+    M_hEN,
+    M_iON,
+    M_jUST,
+    M_tHAT,
+    M_vER,
+    M_wHEN,
+    M_THE,
+    M_LL
 };
 
 // ----------------------------------------------------------
@@ -121,7 +135,36 @@ enum custom_keycodes {
 //     < -   -> <-              (Haskell code)
 //     . *   -> ../             (shell)
 //     . * @ -> ../../
-#define C_MAGIC QK_AREP // LT(0, QK_AREP)  // magic layer
+
+///////////////////////////////////////////////////////////
+// MAGIC TAP DANCE:
+// typedef enum {
+//     TD_NONE,
+//     TD_UNKNOWN,
+//     TD_SINGLE_TAP,
+//     TD_SINGLE_HOLD,
+//     TD_DOUBLE_TAP,
+//     TD_DOUBLE_HOLD,
+//     TD_DOUBLE_SINGLE_TAP, // Send two single taps
+//     TD_TRIPLE_TAP,
+//     TD_TRIPLE_HOLD
+// } td_state_t;
+
+// typedef struct {
+//     bool is_press_action;
+//     td_state_t state;
+// } td_tap_t;
+
+// // Tap dance enums
+// enum {
+//     MAGIC_DANCE
+// };
+
+// td_state_t cur_dance(tap_dance_state_t *state);
+
+// // For the magic tap dance. Put it here so it can be used in any keymap
+// void magictd_finished(tap_dance_state_t *state, void *user_data);
+// void magictd_reset(tap_dance_state_t *state, void *user_data);
 
 // ----------------------------------------------------------------------
 // LAYERS
@@ -175,11 +218,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_STRDY] = LAYOUT(
-  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,    KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
-  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,    KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
-  KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,    KC_H, KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
-    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
+  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
+  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B, C_MAGIC3,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
+  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,     KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
+  KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_H, KC_CANG,  KC_DOT, KC_SCLN,  KC_EQUAL,
+    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, PB_2, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -203,7 +246,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                     _______, _______, _______, _______, _______,                       _______, _______, _______, _______, _______
 ),
 /* RAISE
-// TODO: Numpad? Browser functions? Mouse keys? Previous/Next Line Navigation? Dynamic Macros? Hypermagic keys?
+// TODO: Numpad? Browser functions? Mouse keys? Previous/Next Line Navigation? Dynamic Macros?
  * ,----------------------------------------.                     ,-----------------------------------------.
  * |xBASEx|      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
@@ -278,7 +321,9 @@ uint16_t alt_tab_timer = 0;
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case C_BKSP:  // custom backspace
-            return 150;
+            return 160;
+        case C_ENTR:   // custom enter
+            return 180;
         default:
             return TAPPING_TERM;
     }
@@ -337,10 +382,14 @@ bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
         case KC_LBRC:  // we have our own { key, no shift
         case C_BKSP:  // don't shift backspace.
         case C_MAGIC:  // don't shift magic
+        case C_MAGIC2:
+        case C_MAGIC3:
+        case C_MAGIC4:
+        case QK_AREP:
         case QK_REP:  // don't shift repeat
             return false;
 
-    // ----------------------------------------------------------
+    // - - - - - - - - - - - - - -
     // AutoShift Allow List:
 
     // Custom symbols processing (to avoid clash with KC_LBRC)
@@ -506,15 +555,25 @@ bool caps_word_press_user(uint16_t keycode) {
         case KC_SPC:  // space
         case KC_DEL:
         case KC_UNDS:
-        case C_MAGIC:
+        case QK_AREP:
         case QK_REP:
+        case PB_1:
+        case PB_2:
+        case C_MAGIC:
+        case C_MAGIC2:
+        case C_MAGIC3:
+        case C_MAGIC4:
         case KC_ENT:
         case C_ENTR:
         // These magic patterns work with Caps Word.
-        case M_ION:
-        case M_MENT:
-        case M_QUEN:
-        case M_TMENT:
+        case M_fOR:
+        case M_hEN:
+        case M_iON:
+        case M_jUST:
+        case M_tHAT:
+        case M_wHEN:
+        case M_THE:
+        case M_LL:
             return true;
 
         default:
@@ -1006,64 +1065,249 @@ __attribute__((weak)) char sentence_case_press_user(uint16_t keycode,
 
 __attribute__((weak)) void sentence_case_primed(bool primed) {}
 
-// -------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
 // MAGIC KEY
+uint8_t magic_length = 0;  // length of the string sent out by magic key. used for magic backspace.
+// -------------------------------------------------------------------------
+// An enhanced version of SEND_STRING: if Caps Word is active, the Shift key is
+// held while sending the string. Additionally, the last key is set such that if
+// the Repeat Key is pressed next, it produces `repeat_keycode`.
+#define MAGIC_STRING(str, repeat_keycode) \
+    magic_send_string_P(PSTR(str), (repeat_keycode))
+static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
+    uint8_t saved_mods = 0;
+  // If Caps Word is on, save the mods and hold Shift.
+    if (is_caps_word_on()) {
+        saved_mods = get_mods();
+        register_mods(MOD_BIT(KC_LSFT));
+    }
+
+    send_string_with_delay_P(str, TAP_CODE_DELAY + 50);  // Send the string.
+    set_last_keycode(repeat_keycode);
+
+    // If Caps Word is on, restore the mods.
+    if (is_caps_word_on()) {
+        set_mods(saved_mods);
+    }
+}
+// -------------------------------------------------------------------------
+// DEFAULT: (1tap) - Send the alternate repeat keycode.
 uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
     if ((mods & ~MOD_MASK_SHIFT) == 0) {
         switch (keycode) {
         // For navigating next/previous search results in Vim:
         // N -> Shift + N, Shift + N -> N.
-        case KC_N: return KC_N;
+        // case KC_N: return KC_N;
 
-        // Behavior for Magic Sturdy's "magic" key.
-        case KC_A: return KC_O;         // A -> O
-        case KC_C: return KC_Y;         // C -> Y
-        case KC_D: return KC_Y;         // D -> Y
-        case KC_E: return KC_U;         // E -> U
-        case KC_G: return KC_Y;         // G -> Y
-        case KC_I: return M_ION;        // I -> ON
-        case KC_L: return KC_K;         // L -> K
-        case KC_M: return M_MENT;       // M -> ENT
-        case KC_O: return KC_A;         // O -> A
-        case KC_P: return KC_Y;         // P -> Y
-        case KC_Q: return M_QUEN;       // Q -> UEN
-        case KC_R: return KC_L;         // R -> L
-        case KC_S: return KC_K;         // S -> K
-        case KC_T: return M_TMENT;      // T -> TMENT
-        case KC_U: return KC_E;         // U -> E
-        case KC_Y: return KC_P;         // Y -> P
-        case KC_SPC: return M_THE;      // spc -> THE
+        // Behavior for Magic Sturdy's "magic" key -- TAP
+        case KC_A: magic_length = 1; return KC_O;         // A -> O
+        case KC_B: magic_length = 1; return KC_E;         // B -> E
+        case KC_C: magic_length = 1; return KC_K;         // C -> K
+        case KC_D: magic_length = 1; return KC_Y;         // D -> Y
+        case KC_E: magic_length = 1; return KC_U;         // E -> U
+        case KC_F: magic_length = 2; return M_fOR;        // F -> ROM
+        case KC_G: magic_length = 1; return KC_R;         // G -> R
+        case KC_H: magic_length = 2; return M_hEN;        // H -> EN
+        case KC_I: magic_length = 2; return M_iON;        // I -> ON
+        case KC_J: magic_length = 3; return M_jUST;       // J -> UST
+        case KC_K: magic_length = 1; return KC_S;         // K -> S
+        case KC_L: magic_length = 1; return KC_K;         // L -> K
+        case KC_M: magic_length = 1; return KC_S;         // M -> S
+        case KC_N: magic_length = 1; return KC_H;         // N -> H
+        case KC_O: magic_length = 1; return KC_A;         // O -> A
+        case KC_P: magic_length = 1; return KC_R;         // P -> R
+        // case KC_Q: magic_length = 1; return M_qU;      // Q -> U  NOT DONE; we will have a combo for qu -> q
+        case KC_R: magic_length = 1; return KC_L;         // R -> L
+        case KC_S: magic_length = 1; return KC_K;         // S -> K
+        case KC_T: magic_length = 3; return M_tHAT;       // T -> HAT
+        case KC_U: magic_length = 1; return KC_N;         // U -> N
+        case KC_V: magic_length = 1; return M_vER;        // V -> ER
+        case KC_W: magic_length = 3; return M_wHEN;       // W -> HEN
+        case KC_X: magic_length = 1; return KC_P;         // X -> P
+        case KC_Y: magic_length = 1; return KC_P;         // Y -> P
+        case KC_Z: magic_length = 1; return KC_E;         // Z -> E
+        case KC_SPC: magic_length = 3; return M_THE;      // spc -> THE
 
-        case KC_DOT: return M_UPDIR;    // . -> ./
+        case KC_1 ... KC_0: magic_length = 1; return KC_DOT; // 1-0 -> .
+        case KC_9PRC: magic_length = 1; return KC_DOT;       // 9 -> .
+
+        case KC_DOT: magic_length = 1; return M_UPDIR;    // . -> ./
         case KC_COMM:                   // ! -> ==
             if ((mods & MOD_MASK_SHIFT) == 0) {
             return KC_NO;
             }
             // Fall through intended.
-        case KC_EQL: return M_EQEQ;     // = -> ==
-        case KC_HASH: return M_INCLUDE; // # -> include
+        case KC_EQL: magic_length = 2; return M_EQEQ;     // = -> ==
+        case KC_HASH: magic_length = 7; return M_INCLUDE; // # -> include
         case KC_QUOT:
+            // Fall through intended.
+        case KC_DQOT:
             // Shouldn't happen because of auto shift but...
             if ((mods & MOD_MASK_SHIFT) != 0) {
+            magic_length = 1;  // Not done.
             return M_DOCSTR;  // " -> ""<cursor>"""
             }
-            return KC_NO;
-        case KC_DQOT:
-            if ((mods & MOD_MASK_SHIFT) != 0) {
-            return M_DOCSTR;  // " -> ""<cursor>"""
+            else {
+            magic_length = 2;
+            return M_LL;
             }
-            return KC_NO;
         case KC_GRV:  // ` -> ``<cursor>``` (for Markdown code)
+            magic_length = 1;  // Not done.
             return M_MKGRVS;
-        case KC_LABK: return KC_MINS;   // < -> - (for Haskell)
+        case KC_LABK: magic_length = 1; return KC_MINS;   // < -> - (for Haskell)
         }
     } else if ((mods & MOD_MASK_CTRL)) {
         switch (keycode) {
         case KC_A:  // Ctrl+A -> Ctrl+C
+            magic_length = 0;
             return C(KC_C);
         }
     }
+    magic_length = 0;
     return KC_TRNS;
+}
+// Option 2: (1hold)
+// https://github.com/Ikcelaks/keyboard_layouts/blob/main/magic_sturdy/QMK_Layout/Moonlander/magic_sturdy/keymap.c
+// https://www.ngrams.info/ for ngrams
+static int process_magic_key_2(uint16_t keycode, uint8_t mods) {
+    if ((mods & ~MOD_MASK_SHIFT) == 0) {
+        switch (keycode) {
+        // Behavior for Magic Sturdy's "magic" key -- HOLD
+        case KC_A: MAGIC_STRING(/*a*/"ck", KC_K); return 2;         // A -> CK
+        case KC_B: MAGIC_STRING(/*b*/"an", KC_N); return 2;         // B -> AN
+        case KC_C: tap_code(KC_Y); return 1;                        // C -> Y
+        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE
+        case KC_E: MAGIC_STRING(/*e*/"nce", KC_E); return 3;        // E -> NCE
+        case KC_F: MAGIC_STRING(/*f*/"ound", KC_D); return 4;       // F -> OUND
+        case KC_G: tap_code(KC_L); return 1;                        // G -> L
+        case KC_H: MAGIC_STRING(/*h*/"ere", KC_E); return 3;        // H -> ERE
+        case KC_I: MAGIC_STRING(/*h*/"ze", KC_E); return 2;         // I -> ZE
+        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW
+        case KC_L: tap_code(KC_L); return 1;                        // L -> Y
+        case KC_M: MAGIC_STRING(/*m*/"ent", KC_T); return 3;        // M -> ENT
+        case KC_N: MAGIC_STRING(/*n*/"ess", KC_S); return 3;        // N -> ESS
+        case KC_O: MAGIC_STRING(/*o*/"ut", KC_T); return 2;         // O -> UT
+        case KC_P: tap_code(KC_Y); return 1;                        // P -> Y
+        // case KC_Q: return M_qU;      // Q -> U  NOT DONE; we will have a combo for qu -> q
+        case KC_R: tap_code(KC_K); return 1;                        // R -> K
+        case KC_S: MAGIC_STRING(/*s*/"ome", KC_E); return 3;        // S -> OME
+        case KC_T: MAGIC_STRING(/*t*/"hen", KC_N); return 3;        // T -> HEN
+        case KC_U: tap_code(KC_E); return 1;                        // U -> E
+        case KC_V: MAGIC_STRING(/*v*/"alue", KC_E); return 4;       // V -> ALUE
+        case KC_W: MAGIC_STRING(/*w*/"ith", KC_H); return 3;        // W -> ITH
+        case KC_X: tap_code(KC_T); return 1;                        // X -> T
+        case KC_Y: MAGIC_STRING(/*y*/"ear", KC_R); return 3;        // Y -> EAR
+        case KC_Z: MAGIC_STRING(/*w*/"one", KC_E); return 3;        // Z -> ONE
+        case KC_SPC: MAGIC_STRING(/* */"and", KC_D); return 3;      // spc -> AND
+        case KC_DQOT:
+            // Shouldn't happen because of auto shift but...
+            if ((mods & MOD_MASK_SHIFT) != 0) {
+            return 0;
+            }
+            else {
+            MAGIC_STRING(/*'*/"re", KC_E); return 2;                // ' -> 'RE
+            }
+        }
+    }
+    return 0;
+}
+
+// Option 3: (2tap)
+static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
+    if ((mods & ~MOD_MASK_SHIFT) == 0) {
+        switch (keycode) {
+        // For navigating next/previous search results in Vim:
+        // N -> Shift + N, Shift + N -> N.
+        // case KC_N: return KC_N;
+
+        // Behavior for Magic Sturdy's "magic" key -- HOLD
+        case KC_A: MAGIC_STRING(/*a*/"ble", KC_E); return 3;        // A -> BLE
+        case KC_B: MAGIC_STRING(/*a*/"efore", KC_E); return 5;      // B -> EFORE
+        case KC_C: tap_code(KC_R); return 1;                        // C -> R
+        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE  // no other d's, so this repeats for now.
+        case KC_E: MAGIC_STRING(/*e*/"xp", KC_P); return 2;         // E -> XP
+        case KC_F: MAGIC_STRING(/*f*/"alse", KC_E); return 4;       // F -> ALSE
+        case KC_G: tap_code(KC_Y); return 1;                        // G -> Y
+        case KC_H: MAGIC_STRING(/*h*/"aving", KC_G); return 5;      // H -> AVING
+        case KC_I: MAGIC_STRING(/*i*/"ous", KC_S); return 3;        // I -> OUS
+        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW  // no other k's, so this repeats for now.
+        case KC_L: MAGIC_STRING(/*l*/"at", KC_T); return 2;         // L -> AT
+        case KC_M: MAGIC_STRING(/*m*/"ore", KC_E); return 3;        // M -> ORE
+        case KC_N: MAGIC_STRING(/*n*/"ext", KC_T); return 3;        // N -> EXT
+        case KC_O: MAGIC_STRING(/*o*/"ver", KC_R); return 3;        // O -> VER
+        case KC_P: MAGIC_STRING(/*p*/"lease", KC_E); return 5;      // P -> LEASE
+        // case KC_Q: return M_qU;      // Q -> U  NOT DONE; we will have a combo for qu -> q
+        case KC_R: MAGIC_STRING(/*r*/"ight", KC_T); return 4;       // R -> IGHT
+        case KC_S: MAGIC_STRING(/*s*/"how", KC_W); return 3;        // S -> HOW
+        case KC_T: MAGIC_STRING(/*t*/"ment", KC_T); return 4;       // T -> MENT
+        case KC_U: MAGIC_STRING(/*u*/"se", KC_E); return 2;         // U -> SE
+        case KC_V: MAGIC_STRING(/*v*/"iew", KC_W); return 3;        // V -> IEW  // no other v's, so this repeats for now.
+        case KC_W: MAGIC_STRING(/*w*/"ork", KC_K); return 3;        // W -> ORK
+        case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3;        // X -> ENO
+        case KC_Y: tap_code(KC_C); return 1;                        // Y -> C
+        case KC_Z: MAGIC_STRING(/*z*/"oom", KC_M); return 3;        // Z -> OOM
+        case KC_SPC: MAGIC_STRING(/* */"from", KC_M); return 4;     // spc -> FROM
+        case KC_DQOT:
+            // Shouldn't happen because of auto shift but...
+            if ((mods & MOD_MASK_SHIFT) != 0) {
+            return 0;
+            }
+            else {
+            MAGIC_STRING(/*'*/"ve", KC_E); return 2;                // ' -> 'VE
+            }
+        }
+    }
+    return 0;
+}
+// Option 4 (2Hold)
+bool process_magic_key_4(uint16_t keycode, uint8_t mods) {
+    if ((mods & ~MOD_MASK_SHIFT) == 0) {
+        switch (keycode) {
+        // For navigating next/previous search results in Vim:
+        // N -> Shift + N, Shift + N -> N.
+        // case KC_N: return KC_N;
+
+        // Behavior for Magic Sturdy's "magic" key -- HOLD
+        case KC_A: MAGIC_STRING(/*a*/"bout", KC_T); return 4;       // A -> BOUT
+        case KC_B: MAGIC_STRING(/*b*/"etween", KC_N); return 6;     // B -> ETWEEN
+        case KC_C: MAGIC_STRING(/*c*/"or", KC_R); return 2;         // C -> OR
+        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE  // no other d's, so this repeats for now.
+        case KC_E: MAGIC_STRING(/*e*/"very", KC_Y); return 4;       // E -> VERY
+        case KC_F: MAGIC_STRING(/*f*/"urther", KC_R); return 6;     // F -> URTHER
+        case KC_G: MAGIC_STRING(/*g*/"eneral", KC_L); return 6;     // G -> ENERAL
+        case KC_H: MAGIC_STRING(/*h*/"owever", KC_R); return 6;     // H -> OWEVER
+        case KC_I: MAGIC_STRING(/*i*/"ble", KC_E); return 3;        // I -> BLE
+        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW  // no other k's, so this repeats for now.
+        case KC_L: MAGIC_STRING(/*l*/"ike", KC_E); return 3;        // L -> IKE
+        case KC_M: MAGIC_STRING(/*m*/"anage", KC_E); return 5;      // M -> ANAGE
+        case KC_N: MAGIC_STRING(/*n*/"othing", KC_G); return 6;     // N -> OTHING
+        case KC_O: MAGIC_STRING(/*o*/"riginal", KC_L); return 7;    // O -> RIGINAL
+        case KC_P: MAGIC_STRING(/*p*/"revious", KC_S); return 8;    // P -> REVIOUS
+        // case KC_Q: return M_qU;      // Q -> U  NOT DONE; we will have a combo for qu -> q
+        case KC_R: MAGIC_STRING(/*r*/"eview", KC_W); return 5;      // R -> EVIEW
+        case KC_S: MAGIC_STRING(/*s*/"hould", KC_D); return 5;      // S -> HOULD
+        case KC_T: MAGIC_STRING(/*t*/"hrough", KC_H); return 6;     // T -> HROUGH
+        case KC_U: MAGIC_STRING(/*u*/"sual", KC_L); return 4;       // U -> SUAL
+        case KC_V: MAGIC_STRING(/*v*/"ersion", KC_N); return 6;     // V -> ERSION
+        case KC_W: MAGIC_STRING(/*w*/"hich", KC_H); return 4;       // W -> HICH
+        case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3;        // X -> ENO  // no other x's, so this repeats for now.
+        case KC_Y: MAGIC_STRING(/*y*/"esterday", KC_Y); return 8;   // Y -> ESTERDAY
+        case KC_Z: MAGIC_STRING(/*z*/"oom", KC_M); return 3;        // Z -> OOM  // no other z's, so this repeats for now.
+        case KC_SPC: MAGIC_STRING(/* */"your", KC_R); return 4;      // spc -> YOUR
+        case KC_DQOT:
+            // Shouldn't happen because of auto shift but...
+            if ((mods & MOD_MASK_SHIFT) != 0) {
+            return 0;
+            }
+            else {
+            MAGIC_STRING(/*'*/"ve", KC_E); return 2;                // ' -> 'VE  // no other apostrophes longer than 2?
+            }
+        }
+    }
+    return 0;
 }
 bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
                             uint8_t* remembered_mods) {
@@ -1094,154 +1338,168 @@ bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
 
     return true;
 }
-// An enhanced version of SEND_STRING: if Caps Word is active, the Shift key is
-// held while sending the string. Additionally, the last key is set such that if
-// the Repeat Key is pressed next, it produces `repeat_keycode`.
-#define MAGIC_STRING(str, repeat_keycode) \
-    magic_send_string_P(PSTR(str), (repeat_keycode))
-static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
-    uint8_t saved_mods = 0;
-  // If Caps Word is on, save the mods and hold Shift.
-    if (is_caps_word_on()) {
-        saved_mods = get_mods();
-        register_mods(MOD_BIT(KC_LSFT));
-    }
 
-    send_string_with_delay_P(str, TAP_CODE_DELAY);  // Send the string.
-    set_last_keycode(repeat_keycode);
+// -------------------------------------------------------
+// TAP DANCE
+// https://docs.qmk.fm/#/feature_tap_dance
+/* Return an integer that corresponds to what kind of tap dance should be executed.
+ *
+ * How to figure out tap dance state: interrupted and pressed.
+ *
+ * Interrupted: If the state of a dance is "interrupted", that means that another key has been hit
+ *  under the tapping term. This is typically indicitive that you are trying to "tap" the key.
+ *
+ * Pressed: Whether or not the key is still being pressed. If this value is true, that means the tapping term
+ *  has ended, but the key is still being pressed down. This generally means the key is being "held".
+ *
+ * One thing that is currenlty not possible with qmk software in regards to tap dance is to mimic the "permissive hold"
+ *  feature. In general, advanced tap dances do not work well if they are used with commonly typed letters.
+ *  For example "A". Tap dances are best used on non-letter keys that are not hit while typing letters.
+ *
+ * Good places to put an advanced tap dance:
+ *  z,q,x,j,k,v,b, any function key, home/end, comma, semi-colon
+ *
+ * Criteria for "good placement" of a tap dance key:
+ *  Not a key that is hit frequently in a sentence
+ *  Not a key that is used frequently to double tap, for example 'tab' is often double tapped in a terminal, or
+ *    in a web form. So 'tab' would be a poor choice for a tap dance.
+ *  Letters used in common words as a double. For example 'p' in 'pepper'. If a tap dance function existed on the
+ *    letter 'p', the word 'pepper' would be quite frustating to type.
+ *
+ * For the third point, there does exist the 'TD_DOUBLE_SINGLE_TAP', however this is not fully tested
+ *
+ */
 
-    // If Caps Word is on, restore the mods.
-    if (is_caps_word_on()) {
-        set_mods(saved_mods);
-    }
-}
+// td_state_t cur_dance(tap_dance_state_t *state) {
+//     if (state->count == 1) {
+//         if (state->interrupted || !state->pressed) return TD_SINGLE_TAP;
+//         // Key has not been interrupted, but the key is still held. Means you want to send a 'HOLD'.
+//         else return TD_SINGLE_HOLD;
+//     } else if (state->count == 2) {
+//         // TD_DOUBLE_SINGLE_TAP is to distinguish between typing "pepper", and actually wanting a double tap
+//         // action when hitting 'pp'. Suggested use case for this return value is when you want to send two
+//         // keystrokes of the key, and not the 'double tap' action/macro.
+//         if (state->interrupted) return TD_DOUBLE_SINGLE_TAP;
+//         else if (state->pressed) return TD_DOUBLE_HOLD;
+//         else return TD_DOUBLE_TAP;
+//     }
 
-// bool process_magic_key_2(uint16_t prev_keycode, uint8_t prev_mods) {
-//     switch (prev_keycode) {
-//         case KC_B:
-//             SEND_STRING("ecome");
-//             return false;
-//         case KC_F:
-//             SEND_STRING("ollow");
-//             return false;
-//         case KC_N:
-//             SEND_STRING("eighbor");
-//             return false;
-//         case KC_H:
-//             SEND_STRING("owever");
-//             return false;
-//         case KC_U:
-//             SEND_STRING("pgrade");
-//             return false;
-//         case KC_O:
-//             SEND_STRING("ther");
-//             return false;
-//         case KC_A:
-//             SEND_STRING("lready");
-//             return false;
-//         case KC_P:
-//             SEND_STRING("sych");
-//             return false;
-//         case KC_I:
-//             SEND_STRING("'ll");
-//             return false;
-//         case KC_K:
-//             SEND_STRING("now");
-//             return false;
-//         case KC_T:
-//             SEND_STRING("hough");
-//             return false;
-//         case KC_L:
-//             SEND_STRING("ittle");
-//             return false;
-//         case KC_M:
-//         case KC_R:
-//             SEND_STRING("ight");
-//             return false;
-//         case KC_J:
-//             SEND_STRING("udge");
-//             return false;
-//         case KC_C:
-//             SEND_STRING("ould");
-//             return false;
-//         case KC_D:
-//             SEND_STRING("evelop");
-//             return false;
-//         case KC_G:
-//             SEND_STRING("eneral");
-//             return false;
-//         case KC_W:
-//             SEND_STRING("here");
-//             return false;
-//         case KC_S:
-//             SEND_STRING("hould");
-//             return false;
-//         case KC_DOT:
-//             SEND_STRING("org");
-//             return false;
-//         case KC_COMM:
-//             SEND_STRING(" however");
-//             return false;
-//         default:
-//             SEND_STRING("'ll");
-//             return false;
+//     // Assumes no one is trying to type the same letter three times (at least not quickly).
+//     // If your tap dance key is 'KC_W', and you want to type "www." quickly - then you will need to add
+//     // an exception here to return a 'TD_TRIPLE_SINGLE_TAP', and define that enum just like 'TD_DOUBLE_SINGLE_TAP'
+//     if (state->count == 3) {
+//         if (state->interrupted || !state->pressed) return TD_TRIPLE_TAP;
+//         else return TD_TRIPLE_HOLD;
+//     } else return TD_UNKNOWN;
+// }
+
+///////////////////////////////////////////////////////////////
+// MAGIC TAP DANCE
+// Broken since no custom keycodes in tap dance.
+
+// Create an instance of 'td_tap_t' for the 'x' tap dance.
+// static td_tap_t magictap_state = {
+//     .is_press_action = true,
+//     .state = TD_NONE
+// };
+
+// void magictd_finished(tap_dance_state_t *state, void *user_data) {
+//     magictap_state.state = cur_dance(state);
+//     switch (magictap_state.state) {
+//         case TD_SINGLE_TAP: register_code16(QK_AREP); break;
+//         case TD_SINGLE_HOLD: register_code16(C_MAGIC2); break;
+//         case TD_DOUBLE_TAP: register_code16(C_MAGIC3); break;
+//         case TD_DOUBLE_HOLD: register_code16(C_MAGIC4); break;
+//         // Last case is for fast typing. Assuming your key is `f`:
+//         // For example, when typing the word `buffer`, and you want to make sure that you send `ff` and not `Esc`.
+//         // In order to type `ff` when typing fast, the next character will have to be hit within the `TAPPING_TERM`, which by default is 200ms.
+//         case TD_DOUBLE_SINGLE_TAP: register_code16(QK_AREP); unregister_code16(QK_AREP); register_code16(QK_AREP); break;
+//         default: break;
 //     }
 // }
-// bool process_magic_key_3(uint16_t prev_keycode, uint8_t prev_mods) {
-//     switch (prev_keycode) {
-//         case KC_B:
-//             SEND_STRING("etween");
-//             return false;
-//         case KC_N:
-//             SEND_STRING("umber");
-//             return false;
-//         case KC_U:
-//             SEND_STRING("pdate");
-//             return false;
-//         case KC_A:
-//             SEND_STRING("bout");
-//             return false;
-//         case KC_W:
-//             SEND_STRING("orld");
-//             return false;
-//         case KC_G:
-//             SEND_STRING("overn");
-//             return false;
-//         case KC_P:
-//             SEND_STRING("rogram");
-//             return false;
-//         case KC_Q:
-//             SEND_STRING("uestion");
-//             return false;
-//         case KC_C:
-//             SEND_STRING("rowd");
-//             return false;
-//         case KC_S:
-//             SEND_STRING("chool");
-//             return false;
-//         case KC_T:
-//             SEND_STRING("hrough");
-//             return false;
-//         case KC_M:
-//             SEND_STRING("anage");
-//             return false;
-//         case KC_O:
-//             SEND_STRING("xygen");
-//             return false;
-//         case KC_I:
-//             SEND_STRING("'m");
-//             return false;
-//         case KC_E:
-//             SEND_STRING("'re");
-//             return false;
-//         case KC_DOT:
-//             SEND_STRING("com");
-//             return false;
-//         case KC_COMM:
-//             SEND_STRING(" since");
-//             return false;
-//         default:
-//             return false;
+
+// void magictd_reset(tap_dance_state_t *state, void *user_data) {
+//     switch (magictap_state.state) {
+//         case TD_SINGLE_TAP: unregister_code16(QK_AREP); break;
+//         case TD_SINGLE_HOLD: unregister_code16(C_MAGIC2); break;
+//         case TD_DOUBLE_TAP: unregister_code16(C_MAGIC3); break;
+//         case TD_DOUBLE_HOLD: unregister_code16(C_MAGIC4); break;
+//         case TD_DOUBLE_SINGLE_TAP: unregister_code16(QK_AREP); break;
+//         default: break;
+//     }
+//     magictap_state.state = TD_NONE;
+// }
+
+// tap_dance_action_t tap_dance_actions[] = {
+//     [MAGIC_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, magictd_finished, magictd_reset)
+// };
+
+///////////////////////////////////////////////////////////////////////////
+// MAGIC COMBOS
+enum combos {
+    MAGIC_TAP_C,
+    MAGIC_HOLD_C,
+    REP_TAP_C,
+    MAGIC_REP_TAP_C,
+    MAGIC_REP_HOLD_C,
+};
+
+const uint16_t PROGMEM magic_tap[] = {PB_1, COMBO_END};
+const uint16_t PROGMEM magic_hold[] = {PB_1, COMBO_END};
+// const uint16_t PROGMEM magic_twotap[] = {QK_AREP, C_MAGIC, COMBO_END};
+// const uint16_t PROGMEM magic_twohold[] = {QK_AREP, C_MAGIC, COMBO_END};
+const uint16_t PROGMEM rep_tap[] = {PB_2, COMBO_END};
+// const uint16_t PROGMEM rep_hold[] = {PB_2, COMBO_END};
+const uint16_t PROGMEM magic_rep_tap[] = {PB_1, PB_2, COMBO_END};
+const uint16_t PROGMEM magic_rep_hold[] = {PB_1, PB_2, COMBO_END};
+
+combo_t key_combos[] = {
+    [REP_TAP_C] = COMBO(rep_tap, QK_REP),
+    [MAGIC_TAP_C] = COMBO(magic_tap, QK_AREP),
+    [MAGIC_HOLD_C] = COMBO(magic_hold, C_MAGIC2),
+    [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, C_MAGIC3),
+    [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, C_MAGIC4)
+};
+
+bool get_combo_must_tap(uint16_t index, combo_t *combo) {
+    switch (index) {
+        case MAGIC_TAP_C:  // fallthrough intended obvs
+        case REP_TAP_C:
+        case MAGIC_REP_TAP_C:
+            return true;
+    }
+    return false;
+};
+
+bool get_combo_must_hold(uint16_t index, combo_t *combo) {
+    switch (index) {
+        case MAGIC_HOLD_C:  // fallthrough intended obvs
+        case MAGIC_REP_HOLD_C:
+            return true;
+    }
+    return false;
+}
+
+bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
+    return false;
+}
+
+// void process_combo_event(uint16_t combo_index, bool pressed) {
+//     int rep_keycode = get_alt_repeat_key_keycode();
+//     int rep_mods = get_last_mods();
+    
+//     switch(combo_index) {
+//         case MAGIC_REP_TAP_C:
+//             if (pressed) {
+//                 register_code16(QK_AREP);
+//                 SS_DELAY(200);
+//                 unregister_code16(QK_AREP);
+//             }
+//             break;
+//         case MAGIC_REP_HOLD_C:
+//             if (pressed) {
+//                 process_magic_key_2(rep_keycode, rep_mods);
+//             }
 //     }
 // }
 
@@ -1256,6 +1514,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Select Word
     if (!process_select_word(keycode, record, KC_SLWD)) { return false; }
 
+    // int rep_keycode = get_alt_repeat_key_keycode();
+    // int rep_mods = get_mods();
+
     // If alt repeating a key A-Z with no mods other than Shift, set the last key
     // to KC_N. Above, alternate repeat of KC_N is defined to be again KC_N. This
     // way, either tapping alt repeat and then repeat (or double tapping alt
@@ -1263,6 +1524,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     //
     //   O <altrep> <rep> -> OAN (as in "loan")
     //   D <altrep> <rep> -> DYN (as in "dynamic")
+
     if (get_repeat_key_count() < 0 && KC_A <= keycode && keycode <= KC_Z && keycode != KC_N && (get_last_mods() & ~MOD_MASK_SHIFT) == 0) {
         set_last_keycode(KC_N);
         set_last_mods(0);
@@ -1290,6 +1552,46 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case KC_QWERTY:
                 set_single_persistent_default_layer(_QWERTY);
                 return false;
+
+            // MAGIC KEY TAP DANCE
+            // case QK_AREP:
+            //     get_alt_repeat_key_keycode_user();
+            //     return false;
+            case C_MAGIC2:
+                process_magic_key_2(get_last_keycode(), get_last_mods());
+                return false;
+            case C_MAGIC3:
+                process_magic_key_3(get_last_keycode(), get_last_mods());
+                return false;
+            case C_MAGIC4:
+                process_magic_key_4(get_last_keycode(), get_last_mods());
+                return false;
+
+            // MAGIC
+            // Macros invoked through the MAGIC key #1.
+            case M_THE:     MAGIC_STRING(/* */"the", KC_SPC); break;
+
+            // TODO: determine more sensible last letters to give REP key.
+            case M_fOR:     MAGIC_STRING(/*d*/"or", KC_R); break;
+            case M_hEN:     MAGIC_STRING(/*d*/"en", KC_N); break;
+            case M_iON:     MAGIC_STRING(/*d*/"on", KC_N); break;
+            case M_jUST:    MAGIC_STRING(/*d*/"ust", KC_T); break;
+            case M_tHAT:    MAGIC_STRING(/*d*/"hat", KC_T); break;
+            case M_vER:     MAGIC_STRING(/*d*/"er", KC_R); break;
+            case M_wHEN:    MAGIC_STRING(/*d*/"hen", KC_N); break;
+
+            case M_LL:      MAGIC_STRING(/*d*/"ll", KC_L); break;
+
+            case M_UPDIR:   MAGIC_STRING(/*.*/"./", UPDIR); break;
+            case M_INCLUDE: SEND_STRING_DELAY(/*#*/"include ", TAP_CODE_DELAY); break;
+            case M_EQEQ:    SEND_STRING_DELAY(/*=*/"==", TAP_CODE_DELAY); break;
+            case M_DOCSTR:
+                SEND_STRING_DELAY(/*"*/"\"\"\"\"\""
+                    SS_TAP(X_LEFT) SS_TAP(X_LEFT) SS_TAP(X_LEFT), TAP_CODE_DELAY);
+                break;
+            case M_MKGRVS:
+                SEND_STRING_DELAY(/*`*/"``\n\n```" SS_TAP(X_UP), TAP_CODE_DELAY);
+                break;
 
             // mac-win switching
             case KC_PRVWD:
@@ -1549,24 +1851,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     SEND_STRING(SS_LCTL("ct") SS_DELAY(200) SS_LCTL("v") SS_TAP(X_ENTER));
                 }
                 return false;
-                break;
-
-            // MAGIC
-            // Macros invoked through the MAGIC key.
-            case M_ION:     MAGIC_STRING(/*i*/"on", KC_S); break;
-            case M_MENT:    MAGIC_STRING(/*m*/"ent", KC_S); break;
-            case M_QUEN:    MAGIC_STRING(/*q*/"uen", KC_C); break;
-            case M_TMENT:   MAGIC_STRING(/*t*/"ment", KC_S); break;
-            case M_THE:     MAGIC_STRING(/* */"the", KC_N); break;
-            case M_UPDIR:   MAGIC_STRING(/*.*/"./", UPDIR); break;
-            case M_INCLUDE: SEND_STRING_DELAY(/*#*/"include ", TAP_CODE_DELAY); break;
-            case M_EQEQ:    SEND_STRING_DELAY(/*=*/"==", TAP_CODE_DELAY); break;
-            case M_DOCSTR:
-                SEND_STRING_DELAY(/*"*/"\"\"\"\"\""
-                    SS_TAP(X_LEFT) SS_TAP(X_LEFT) SS_TAP(X_LEFT), TAP_CODE_DELAY);
-                break;
-            case M_MKGRVS:
-                SEND_STRING_DELAY(/*`*/"``\n\n```" SS_TAP(X_UP), TAP_CODE_DELAY);
                 break;
         }
     }
@@ -2073,7 +2357,6 @@ static void print_status_narrow(void) {
     } else {
         oled_write_ln_P(PSTR("WIN"), false);
     }
-    oled_write_P(PSTR("-----"), false);
     // print base layer
     switch (get_highest_layer(default_layer_state)) {
         case _STRDY:
@@ -2110,6 +2393,8 @@ static void print_status_narrow(void) {
     oled_write_P(PSTR("SELWD"), selwd_state != SELWD_STATE_NONE); // select word
     oled_write_P(PSTR("SNCSE"), sentence_state == SNCSE_STATE_ENDING || sentence_state == SNCSE_STATE_PRIMED); // sentence case
     oled_write_P(PSTR("-----"), false);
+    oled_write_P(PSTR(get_u16_str(get_last_keycode(), '0')), false);
+    // oled_write_P(PSTR(get_u8_str(get_alt_repeat_key_keycode(), '0')), false);
     // QMK
     // render_logo();  // TODO: Get a better logo.
     render_luna(0, 13);

@@ -40,6 +40,9 @@ for more options.
 #define CAPS_WORD_IDLE_TIMEOUT 5000  // When idle, turn off Caps Word after 5 seconds.
 #define CAPS_WORD_INVERT_ON_SHIFT true  // shift reverses caps
 
+// Combos
+#define COMBO_HOLD_TERM 150
+
 // ------------------------------------------------------------------------------------------------
 // Previous Key Behaviour
 #define PREVKEY_TIMEOUT_MS 5000  // Timeout in milliseconds.

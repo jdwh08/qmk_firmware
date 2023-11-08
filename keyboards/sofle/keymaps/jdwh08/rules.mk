@@ -19,3 +19,7 @@ CAPS_WORD_ENABLE = yes
 OS_DETECTION_ENABLE = yes
 
 WPM_ENABLE = yes  # Needed for OLED
+
+# TAP_DANCE_ENABLE = yes
+COMBO_ENABLE = yes
+PROGRAMMABLE_BUTTON_ENABLE = yes  # use PG1 & PG2 for combos
