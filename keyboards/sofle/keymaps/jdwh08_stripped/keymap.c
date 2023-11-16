@@ -405,7 +405,7 @@ enum combos {
     MAGIC_TAP_C,
     MAGIC_HOLD_C,
     // MAGIC_TWOTAP_C,
-    MAGIC_REP_TAP_C,
+    // MAGIC_REP_TAP_C,
     MAGIC_REP_HOLD_C,
 };
 
@@ -425,13 +425,14 @@ combo_t key_combos[] = {
     // [MAGIC_TWOTAP_C] = COMBO(magic_twotap, ALTREP3),
     [REP_HOLD_C] = COMBO(rep_hold, ALTREP3),
     [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, ALTREP4)
+    // [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, ALTREP4)
 };
 
 bool get_combo_must_tap(uint16_t index, combo_t *combo) {
     switch (index) {
         case MAGIC_TAP_C:  // fallthrough intended obvs
         case REP_TAP_C:
-        // case MAGIC_TWOTAP_C:
+        // case MAGIC_REP_TAP_C:
             return true;
     }
     return false;
