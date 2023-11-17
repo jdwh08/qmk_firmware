@@ -1,15 +1,10 @@
 #include QMK_KEYBOARD_H
 
-enum sofle_layers {
-    /* _M_XYZ = Mac Os, _W_XYZ = Win/Linux */
-    _QWERTY,
-    _STRDY,
-    _EXTND,
-    _RAISE,
-    _ADJUST,
-};
+// ----------------------------------------------------------------------------------------------------
+// CUSTOM KEYCODES
 
 enum custom_keycodes {
+    // Built in Defaults
     KC_QWERTY = SAFE_RANGE,
     KC_STRDY,
     KC_PRVWD,
@@ -18,11 +13,47 @@ enum custom_keycodes {
     KC_LEND,
     KC_DLINE,
 
+    // MAGIC KEYS
     ALTREP2,
     ALTREP3,
     ALTREP4,
+
+    // Extra Functions
+    KC_SLWD,  // select word
+    KC_SRCH,  // search selection in browser (assume browser open)
+    KC_SRCHB, // search selection in browser (opens browser first)
+
+    KC_REDO,  // redo LCTL(KC_Y)
+    KC_SNIP,  // snip portion of screen
+    KC_PRNT,  // print LCTL(KC_P)
+    KC_SLAL,  // select all LCTL(KC_A)
+    KC_CNEW,  // new LCTL(KC_N)
+    KC_TNEW,  // new tab LCTL(KC_T)
+    KC_CLSE,  // close LCTL(KC_W)
+    KC_RFSH,  // refresh LCTL(KC_R)
+    KC_SAVE,  // save LCTL(KC_S)
+    KC_ATAB,  // alt tab LALT(KC_TAB)
+    KC_ZMIN,  // zoom in w/ LCTL(KC_EQL) 
+    KC_ZMOT,  // zoom out w/ LCTL(KC_MINS)
 };
 
+// ----------------------------------------------------------
+// Tap Hold: Custom Keys
+// #define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
+// #define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
+// #define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
+
+// ----------------------------------------------------------------------
+// LAYERS
+
+enum sofle_layers {
+    /* _M_XYZ = Mac Os, _W_XYZ = Win/Linux */
+    _QWERTY,
+    _STRDY,
+    _EXTND,
+    _RAISE,
+    _ADJUST,
+};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
@@ -714,23 +745,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-#ifdef ENCODER_ENABLE
-
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (index == 0) {
-        if (clockwise) {
-            tap_code(KC_VOLU);
-        } else {
-            tap_code(KC_VOLD);
-        }
-    } else if (index == 1) {
-        if (clockwise) {
-            tap_code(KC_PGDN);
-        } else {
-            tap_code(KC_PGUP);
-        }
-    }
-    return true;
-}
-
-#endif
+// ---------------------------------------------------------------------------------------------------------
+// ENCODERS
+#if defined(ENCODER_MAP_ENABLE)
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
+          // Mappings for 1st Encoder          // Mappings for 2nd Encoder
+    [0] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // QWERTY
+    [1] = { ENCODER_CCW_CW(KC_VOLU, KC_VOLD),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // STRDY
+    [2] = { ENCODER_CCW_CW(KC_WH_R, KC_WH_L),  ENCODER_CCW_CW(KC_WH_D, KC_WH_U)  }, // Xtnd2
+    [3] = { ENCODER_CCW_CW(KC_REDO, KC_UNDO), ENCODER_CCW_CW(KC_NXTWD, KC_PRVWD) }, // Raise
+    [4] = { ENCODER_CCW_CW(KC_ZMOT, KC_ZMIN), ENCODER_CCW_CW(KC_BRIU, KC_BRID) }, // Adj
+    // You can add more layers here if you need them, or you can also delete lines for layers you are not using
+};
+#endif  // ENCODER_MAP_ENABLE
