@@ -40,8 +40,12 @@ for more options.
 #define CAPS_WORD_IDLE_TIMEOUT 5000  // When idle, turn off Caps Word after 5 seconds.
 #define CAPS_WORD_INVERT_ON_SHIFT true  // shift reverses caps
 
-// Combos
-// #define COMBO_HOLD_TERM 150
+// -------------------------------------------------------------------
+// COMBOS
+// #define COMBO_TERM_PER_COMBO
+#define COMBO_MUST_HOLD_PER_COMBO
+#define COMBO_MUST_TAP_PER_COMBO
+#define COMBO_MUST_PRESS_IN_ORDER_PER_COMBO
 
 // ------------------------------------------------------------------------------------------------
 // Previous Key Behaviour

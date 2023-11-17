@@ -1,3 +1,6 @@
+## COMPILE WITH
+# qmk generate-autocorrect-data autocorrect_dictionary.txt
+
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -470,3 +473,67 @@ verticies     -> vertices
 whereever     -> wherever
 wherre        -> where
 wierd         -> weird
+
+## EnglishClub Misspelling List
+absense -> absence
+appearence -> appearance
+carribean -> caribbean
+cemetary -> cemetery
+completly -> completely
+definately -> definitely
+florescent -> fluorescent
+flourescent -> fluorescent
+fourty -> forty
+glamourous -> glamorous
+honourary -> honorary
+irresistable -> irresistible
+persistant -> persistent
+publically -> publicly
+tendancy -> tendency
+truely -> truly
+unforseen -> unforeseen
+
+## TCK Publishing Misspelled Words
+acquaintence -> acquaintance
+camoflage -> camouflage
+camoflague -> camouflage
+camouflague -> camouflage
+comitted -> committed
+drunkeness -> drunkenness
+excede -> exceed
+exilerate -> exhilarate
+exhilerate -> exhilarate
+humourous -> humorous
+immitate -> imitate
+indispensible -> indispensable
+jewelry -> jewellery
+jewelery -> jewellery
+judgement -> judgment
+liase -> liaise
+liason -> liaison
+pavillion -> pavilion
+pharoh -> pharaoh
+pharoah -> pharaoh
+Portugese -> Portuguese
+resistence -> resistance
+supercede -> supersede
+tatoo -> tattoo
+threshhold -> threshold
+
+## Infoplease Frequently Misspelled Words
+brocolli -> broccoli
+calender -> calendar
+firey -> fiery
+sacrilige -> sacrilege
+sacriligious -> sacrilegious
+untill -> until
+
+## Infoplease Spelling Demons
+cooly -> coolly
+nickle -> nickel
+resusitate -> resuscitate
+geneology -> genealogy
+minerology -> mineralogy
+baloon -> balloon
+elligible -> eligible
+innoculate -> inoculate
