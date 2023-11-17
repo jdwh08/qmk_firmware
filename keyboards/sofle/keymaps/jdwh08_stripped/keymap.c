@@ -1,4 +1,6 @@
 #include QMK_KEYBOARD_H
+#include "os_detection.h"  // OS Types
+#include "sentence_case.h"
 
 // ----------------------------------------------------------------------------------------------------
 // CUSTOM KEYCODES
@@ -35,15 +37,24 @@ enum custom_keycodes {
     KC_ATAB,  // alt tab LALT(KC_TAB)
     KC_ZMIN,  // zoom in w/ LCTL(KC_EQL) 
     KC_ZMOT,  // zoom out w/ LCTL(KC_MINS)
+
+    // Brackets Doubling
+    KC_9PRC,  // type 9 or () if shifted
+    // C_LPARN,  // helper for ( macro
+    KC_SBRC,  // type [] [squarebracket]
+    KC_CBRC,  // type {} {curlybracket}
+    KC_CANG,  // type , or <> if shifted
+    // C_LANGB,  // helper for < macro
+    KC_DQOT,  // type ""
 };
 
 // ----------------------------------------------------------
 // Tap Hold: Custom Keys
-// #define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
-// #define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
-// #define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
+#define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
+#define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
+#define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
 
-// ----------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////
 // LAYERS
 
 enum sofle_layers {
@@ -54,6 +65,10 @@ enum sofle_layers {
     _RAISE,
     _ADJUST,
 };
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    return update_tri_layer_state(state, _EXTND, _RAISE, _ADJUST);
+}
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
@@ -73,11 +88,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_QWERTY] = LAYOUT(
-  KC_GRV,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                     KC_6,    KC_7,    KC_8,    KC_9,    KC_0,  KC_GRV,
-  KC_ESC,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
-  KC_TAB,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
-  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, KC_MUTE,     XXXXXXX,KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                 KC_LGUI,KC_LALT,KC_LCTL, MO(_EXTND), KC_ENT,      KC_SPC,  MO(_RAISE), KC_RCTL, KC_RALT, KC_RGUI
+  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                     KC_6,    KC_7,    KC_8,    KC_9,    KC_0,  KC_MINUS,
+  KC_GRV,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_SLSH,
+  KC_TAB,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_BSLS,  KC_QUOT,
+  KC_LSFT,   KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, KC_MUTE,KC_MEDIA_PLAY_PAUSE,KC_N,    KC_M,  KC_COMM,  KC_DOT, KC_SCLN,  KC_EQUAL,
+                KC_LGUI, KC_LCTL, TT(_EXTND), C_ENTR, KC_SPC,                   C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /*
  * STRDY
@@ -96,32 +111,32 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_STRDY] = LAYOUT(
-  KC_ESC,   QK_AREP, ALTREP2,  ALTREP3,  ALTREP4,  QK_REP,               KC_6,     KC_7,    KC_8,     KC_9,    KC_0,  KC_MINUS,
+  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
   KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B,  QK_AREP,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
-  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,     KC_N,    KC_E,    KC_A,    KC_I,  KC_QUOT,
+  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,     KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
   KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_H, KC_COMM,  KC_DOT, KC_SCLN,  KC_EQUAL,
-    KC_LGUI,KC_LCTL,TT(_EXTND),KC_ENT, KC_SPC,                    KC_BSPC, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
+    KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
-/* LOWER
+/* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
+ * |xBASEx|  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |  `   |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  | F12  |
+ * | `ESC |Print |BSrcSl|Close |Refrsh|  {   |                    | Snip | MAGIC|PrvWd |UpArrw| NxtWd|   /  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |   !  |   @  |   #  |   $  |   %  |-------.    ,-------|   ^  |   &  |   *  |   (  |   )  |   |  |
- * |------+------+------+------+------+------|  MUTE |    |       |------+------+------+------+------+------|
- * | Shift|  =   |  -   |  +   |   {  |   }  |-------|    |-------|   [  |   ]  |   ;  |   :  |   \  | Shift|
+ * | Tab  | Save |SrchSl| Del  |Selwrd|  [   |-------.    ,-------| Find |AltTab|LArrw |DnArrw| RArrw|   '  |
+ * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
+ * |LShift| Undo | Cut  | Copy | Paste| Redo |-------|    |-------|SlctAl|C(New)|   ,  |   .  |   ;  |   +  |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI | LAlt | LCTR |LOWER | /Enter  /       \Space \  |RAISE | RCTR | RAlt | RGUI |
- *            |      |      |      |      |/       /         \      \ |      |      |      |      |
- *            `----------------------------------'           '------''---------------------------'
+ *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |REPEAT|ADJUST| RAlt | Caps |
+ *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
+ *            `----------------------------------'            '------''---------------------------'
  */
 [_EXTND] = LAYOUT(
-  _______,   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,                       KC_F6,   KC_F7,   KC_F8,   KC_F9,  KC_F10,  KC_F11,
-  KC_GRV,    KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,    KC_7,    KC_8,    KC_9,    KC_0,  KC_F12,
-  _______, KC_EXLM,   KC_AT, KC_HASH,  KC_DLR, KC_PERC,                       KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_PIPE,
-  _______,  KC_EQL, KC_MINS, KC_PLUS, KC_LCBR, KC_RCBR, _______,       _______, KC_LBRC, KC_RBRC, KC_SCLN, KC_COLN, KC_BSLS, _______,
-                       _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
+  TG(_EXTND),  KC_F1,   KC_F2,     KC_F3,       KC_F4,     KC_F5,                       KC_F6,      KC_F7,    KC_F8,   KC_F9,   KC_F10,   KC_F12,
+  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_CBRC,                     KC_SNIP,    _______, KC_PRVWD,   KC_UP, KC_NXTWD,  _______,
+  _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,   KC_SBRC,                     KC_FIND,    KC_ATAB,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
+  _______,   KC_UNDO,   KC_CUT,  KC_COPY,    KC_PASTE,   KC_REDO, _______,   _______, KC_SLAL,    KC_CNEW,  _______, _______,  _______,  _______,
+                    _______, _______, _______, _______, _______,                       _______, _______, _______, _______, _______
 ),
 /* RAISE
  * ,----------------------------------------.                    ,-----------------------------------------.
@@ -189,20 +204,20 @@ bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
 #define MAGIC_STRING(str, repeat_keycode) \
     magic_send_string_P(PSTR(str), (repeat_keycode))
 static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
-    // uint8_t saved_mods = 0;
+    uint8_t saved_mods = 0;
     // If Caps Word is on, save the mods and hold Shift.
-    // if (is_caps_word_on()) {
-    //     saved_mods = get_mods();
-    //     register_mods(MOD_BIT(KC_LSFT));
-    // }
+    if (is_caps_word_on()) {
+        saved_mods = get_mods();
+        register_mods(MOD_BIT(KC_LSFT));
+    }
 
     send_string_with_delay_P(str, TAP_CODE_DELAY);  // Send the string.
     set_last_keycode(repeat_keycode);
 
     // If Caps Word is on, restore the mods.
-    // if (is_caps_word_on()) {
-    //     set_mods(saved_mods);
-    // }
+    if (is_caps_word_on()) {
+        set_mods(saved_mods);
+    }
 }
 
 // DEFAULT: (1tap) - Send the alternate repeat keycode.
@@ -243,7 +258,7 @@ uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
         case KC_SPC: magic_length = 3; MAGIC_STRING(/* */"the", KC_E); return KC_NO;      // spc -> THE
 
         case KC_1 ... KC_0: magic_length = 1; return KC_DOT; // 1-0 -> .
-        // case KC_9PRC: magic_length = 1; return KC_DOT;       // 9 -> .
+        case KC_9PRC: magic_length = 1; return KC_DOT;       // 9 -> .
 
         case KC_DOT: magic_length = 1; MAGIC_STRING(/*.*/"/", KC_NO); return KC_NO;    // . -> ./
         case KC_COMM:                   // ! -> ==
@@ -503,6 +518,757 @@ bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
 // }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS
+// ----------------------------------------------------------------------------
+// OS DETECTION HANDLING
+// https://docs.qmk.fm/#/feature_os_detection
+bool hasos = false;
+os_variant_t hostos;
+static void get_os(void) {
+    if (!hasos) {
+        hostos = detected_host_os();
+        hasos = true;
+    }
+    // Auto switch mode
+    // BUG: this presses the y key on windows.
+    if (hostos == OS_MACOS) {
+        keymap_config.swap_lctl_lgui = true;
+        // process_magic(CG_SWAP, record);  // start off by swapping control and GUI(command)
+    }
+    else {
+        keymap_config.swap_lctl_lgui = false;
+        // process_magic(CG_NORM, record);  // keep control instead of gui
+    }
+}
+// ----------------------------------------------------------------------
+// AUTO SHIFT
+// Prevent repeating for these characters:
+bool get_auto_shift_no_auto_repeat(uint16_t keycode, keyrecord_t *record) {
+    return true;
+}
+// Timeout
+uint16_t get_autoshift_timeout(uint16_t keycode, keyrecord_t *record) {
+    // https://docs.qmk.fm/#/feature_auto_shift
+    switch (keycode) {
+        case AUTO_SHIFT_NUMERIC:
+            return get_generic_autoshift_timeout();
+        case AUTO_SHIFT_SPECIAL:
+            return get_generic_autoshift_timeout();
+        case AUTO_SHIFT_ALPHA:
+            return get_generic_autoshift_timeout();
+        default:
+            return get_generic_autoshift_timeout();
+    }
+}
+// Get AutoShift eligiblity
+bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+    // AutoShift Block List:
+        case KC_LBRC:  // we have our own { key, no shift
+        case C_BKSP:  // don't shift backspace.
+        case QK_AREP:  // don't shift magic
+        case ALTREP2:
+        case ALTREP3:
+        case ALTREP4:
+        case QK_REP:  // don't shift repeat
+            return false;
+
+    // - - - - - - - - - - - - - -
+    // AutoShift Allow List:
+
+    // Custom symbols processing (to avoid clash with KC_LBRC)
+        case KC_MINUS ... KC_EQUAL:
+        case KC_BACKSLASH ... KC_SLASH:
+
+    // Custom characters processing
+        // case KC_UNDO:  // analogue for redo/C(KC_Y)
+        case KC_PRNT:  // C_S(P), e.g. VSCode, Private Mode
+        // case KC_SLAL:  // C_S(A)  https://defkey.com/what-means/ctrl-shift-a
+        case KC_CNEW:  // C_S(N)  https://defkey.com/what-means/ctrl-shift-n
+        // case KC_RFSH:  // C_S(R)
+        case KC_SAVE:  // C_S(S) save as
+        case KC_ATAB: // Alt tab the other way I guess
+
+        case KC_9PRC:  // 9 vs ( macro
+        case KC_CANG: // , vs < macro
+
+    // Default behaviour:
+#    ifndef NO_AUTO_SHIFT_ALPHA
+        case KC_A ... KC_Z:
+#    endif
+#    ifndef NO_AUTO_SHIFT_NUMERIC
+        case KC_1 ... KC_0:
+#    endif
+#    ifndef NO_AUTO_SHIFT_SPECIAL
+#    ifndef NO_AUTO_SHIFT_TAB
+        case KC_TAB:
+#    endif
+#    ifndef NO_AUTO_SHIFT_SYMBOLS
+        // Not used, we have our own symbol shift above.
+        case AUTO_SHIFT_SYMBOLS:
+#    endif
+#    endif
+#    ifdef AUTO_SHIFT_ENTER
+        case KC_ENT:
+#    endif
+        return true;
+    }
+    return get_custom_auto_shifted_key(keycode, record);
+}
+// Custom Keys
+bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
+    switch(keycode) {
+        case KC_9PRC:  // 9 and ( but ( should activate a parentheses macro
+            return true;
+        case KC_CANG:  // , and < but < should activate a bracket macro
+            return true;
+        case KC_DQOT:  // ' and " but " should activate a double quote macro ""
+            return true;
+        default:
+            return false;
+    }
+}
+void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    switch(keycode) {
+        case KC_9PRC:
+            if (!shifted) {
+                register_code16(KC_9);
+            }
+            else {
+                // BRACKET MACRO GOES HERE FOR SOME REASON
+                // WON'T WORK IN NORMAL SPOT
+                // register_code16(C_LPARN);
+                // unregister_code16(C_LPARN);
+                clear_oneshot_mods();  // Temporarily disable mods.
+                unregister_mods(MOD_MASK_CSAG);
+                SEND_STRING("()");
+                tap_code(KC_LEFT);  // move cursor back into ()
+                set_last_keycode(KC_9PRC);
+            }
+            break;
+        case KC_CANG:
+            if (!shifted) {
+                register_code16(KC_COMM);
+            }
+            else {
+                // BRACKET MACRO GOES HERE FOR SOME REASON
+                // WON'T WORK IN NORMAL SPOT
+                // register_code16(C_LANGB);
+                // unregister_code16(C_LANGB);
+                clear_oneshot_mods();  // Temporarily disable mods.
+                unregister_mods(MOD_MASK_CSAG);
+                SEND_STRING("<>");
+                tap_code(KC_LEFT);  // move cursor back into ()
+                set_last_keycode(KC_LABK);
+            }
+            break;
+        case KC_DQOT:
+            if (!shifted) {
+                register_code16(KC_QUOT);
+            }
+            else {
+                clear_oneshot_mods();  // Temporarily disable mods.
+                unregister_mods(MOD_MASK_CSAG);
+                SEND_STRING("\"\"");
+                tap_code(KC_LEFT);  // move cursor back into ""
+                set_last_keycode(KC_DQOT);
+            }
+            break;
+        default:
+            if (shifted) {
+                add_weak_mods(MOD_BIT(KC_LSFT));
+            }
+            // & 0xFF gets the Tap key for Tap Holds, required when using Retro Shift
+            register_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+    }
+}
+void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    switch(keycode) {
+        case KC_9PRC:
+            if (!shifted) {
+                unregister_code16(KC_9);
+            }
+            else {
+                register_mods(get_mods());
+                set_last_keycode(KC_9PRC);
+            }
+            break;
+        case KC_CANG:
+            if (!shifted) {
+                unregister_code16(KC_COMM);
+            }
+            else {
+                register_mods(get_mods());
+                set_last_keycode(KC_LABK);
+            }
+            break;
+        case KC_DQOT:
+            if (!shifted) {
+                unregister_code16(KC_QUOT);
+            }
+            else {
+                register_mods(get_mods());
+            }
+            break;
+        default:
+            // & 0xFF gets the Tap key for Tap Holds, required when using Retro Shift
+            // The IS_RETRO check isn't really necessary here, always using
+            // keycode & 0xFF would be fine.
+            unregister_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+    }
+}
+// ----------------------------------------------------------------------
+// Custom Alt-Tab Key
+bool is_alt_tab_active = false;
+uint16_t alt_tab_timer = 0;
+// ----------------------------------------------------------------------
+// Tap Hold: Tap vs Long-Press Processing
+// https://getreuer.info/posts/keyboards/triggers/index.html#tap-vs.-long-press
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case C_BKSP:  // custom backspace
+            return 160;
+        case C_ENTR:   // custom enter
+            return 180;
+        default:
+            return TAPPING_TERM;
+    }
+} 
+// Given a tap-hold key event, replaces the hold function with `long_press_keycode`.
+static bool process_tap_or_long_press_key(
+    keyrecord_t* record, uint16_t long_press_keycode) {
+    if (record->tap.count == 0) {  // Key is being held.
+        if (record->event.pressed) {
+            set_last_keycode(long_press_keycode);
+            // BUGFIX: will this allow me to process keys within keys?
+            tap_code16(long_press_keycode);
+            // register_code16(long_press_keycode);
+            // unregister_code16(long_press_keycode);
+        }
+        return false;  // Skip default handling.
+    }
+    return true;  // Continue default handling.
+}
+// ----------------------------------------------------------------------
+// CAPS WORD
+bool caps_word_press_user(uint16_t keycode) {
+    switch (keycode) {
+        // DISABLE CAPS WORD WITH THE TOGGLE FFS
+        case CW_TOGG:
+            return false;
+
+        // Keycodes that continue Caps Word, with shift applied.
+        case KC_A ... KC_Z:
+        case KC_MINS:
+        add_weak_mods(MOD_BIT(KC_LSFT));  // Apply shift to the next key.
+        return true;
+
+        // Keycodes that continue Caps Word, without shifting.
+        case KC_1 ... KC_0:
+        case KC_9PRC:  // custom 9()
+        case C_BKSP:  // custom backspace
+        case KC_BSPC:
+        case KC_SPC:  // space
+        case KC_DEL:
+        case KC_UNDS:
+        case QK_AREP:
+        case QK_REP:
+        case ALTREP2:
+        case ALTREP3:
+        case ALTREP4:
+        case KC_ENT:
+        case C_ENTR:
+            return true;
+
+        default:
+        return false;  // Deactivate Caps Word.
+    }
+}
+// void caps_word_set_user(bool active) {
+    // NOTE: I don't think this function has ever worked.
+//     // #ifdef OLED_ENABLE
+//     // if (active) {
+//     //     oled_write_P(PSTR("CAPWD"), true);
+//     // } 
+//     // else {
+//     //     // Do something when Caps Word deactivates.
+//     //     oled_write_P(PSTR("CAPWD"), false);
+//     // }
+//     // # endif // OLED_ENABLE
+
+//     // Set caps lock to ON if caps word is enabled.
+//     // if (active) {
+//     //     led_usb_state.caps_lock = true;
+//     // }
+//     // else {
+//     //     led_usb_state.caps_lock = false;
+//     // }
+// }
+// -------------------------------------------------------------------------
+// SELECT WORD
+
+// https://getreuer.info/posts/keyboards/select-word/index.html
+// Copyright 2021-2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+enum selwd_states {
+    SELWD_STATE_NONE,        // No selection.
+    SELWD_STATE_SELECTED,    // Macro released with something selected.
+    SELWD_STATE_WORD,        // Macro held with word(s) selected.
+    SELWD_STATE_FIRST_LINE,  // Macro held with one line selected.
+    SELWD_STATE_LINE         // Macro held with multiple lines selected.
+};
+static uint8_t selwd_state = SELWD_STATE_NONE;
+
+// Idle timeout timer to disable Select Word after a period of inactivity.
+#if SELECT_WORD_TIMEOUT > 0
+static uint16_t idle_timer = 0;
+void select_word_task(void) {
+    if (selwd_state && timer_expired(timer_read(), idle_timer)) {
+        selwd_state = SELWD_STATE_NONE;
+    }
+}
+#endif  // SELECT_WORD_TIMEOUT > 0
+
+// Process Word Selection
+bool process_select_word(uint16_t keycode, keyrecord_t* record,
+                         uint16_t sel_keycode) {
+    if (keycode == KC_LSFT || keycode == KC_RSFT) {
+        return true;
+    }
+
+    #if SELECT_WORD_TIMEOUT > 0
+    idle_timer = record->event.time + SELECT_WORD_TIMEOUT;
+    #endif  // SELECT_WORD_TIMEOUT > 0
+
+    if (keycode == sel_keycode && record->event.pressed) {  // On key press.
+        const uint8_t mods = get_mods();
+    #ifndef NO_ACTION_ONESHOT
+        const bool shifted = (mods | get_oneshot_mods()) & MOD_MASK_SHIFT;
+        clear_oneshot_mods();
+    #else
+        const bool shifted = mods & MOD_MASK_SHIFT;
+    #endif  // NO_ACTION_ONESHOT
+
+        if (!shifted) {  // Select word.
+            get_os();
+            if (keymap_config.swap_lctl_lgui) {
+                set_mods(MOD_BIT(KC_LALT));  // Hold Left Alt (Option).
+                // set_mods(mod_config(MOD_LALT));
+            }
+            else {
+                set_mods(MOD_BIT(KC_LCTL));  // Hold Left Ctrl.
+                // set_mods(mod_config(MOD_LCTL));
+            }
+            if (selwd_state == SELWD_STATE_NONE) {
+                // On first use, tap Ctrl+Right then Ctrl+Left (or with Alt on Mac) to
+                // ensure the cursor is positioned at the beginning of the word.
+                send_keyboard_report();
+                tap_code(KC_RGHT);
+                tap_code(KC_LEFT);
+            }
+            register_mods(MOD_BIT(KC_LSFT));
+            register_code(KC_RGHT);
+            selwd_state = SELWD_STATE_WORD;
+        } else {  // Select line.
+            if (selwd_state == SELWD_STATE_NONE) {
+                if (keymap_config.swap_lctl_lgui) {
+                    // MAC:
+                    // Tap GUI (Command) + Left, then Shift + GUI + Right.
+                    set_mods(MOD_BIT(KC_LGUI));
+                    send_keyboard_report();
+                    tap_code(KC_LEFT);
+                    register_mods(MOD_BIT(KC_LSFT));
+                    tap_code(KC_RGHT);
+                }
+                else {
+                    // Tap Home, then Shift + End.
+                    clear_mods();
+                    send_keyboard_report();
+                    tap_code(KC_HOME);
+                    register_mods(MOD_BIT(KC_LSFT));
+                    tap_code(KC_END);
+                }
+                set_mods(mods);
+                selwd_state = SELWD_STATE_FIRST_LINE;
+            } else {
+                register_code(KC_DOWN);
+                selwd_state = SELWD_STATE_LINE;
+            }
+        }
+        return false;
+    }
+
+    // `sel_keycode` was released, or another key was pressed.
+    switch (selwd_state) {
+        case SELWD_STATE_WORD:
+            unregister_code(KC_RGHT);
+            if (keymap_config.swap_lctl_lgui) {
+                unregister_mods(MOD_BIT(KC_LSFT) | MOD_BIT(KC_LALT));
+            }
+            else {
+                unregister_mods(MOD_BIT(KC_LSFT) | MOD_BIT(KC_LCTL));
+            }
+            selwd_state = SELWD_STATE_SELECTED;
+            break;
+
+        case SELWD_STATE_FIRST_LINE:
+            selwd_state = SELWD_STATE_SELECTED;
+            break;
+
+        case SELWD_STATE_LINE:
+            unregister_code(KC_DOWN);
+            selwd_state = SELWD_STATE_SELECTED;
+            break;
+
+        case SELWD_STATE_SELECTED:
+            if (keycode == KC_ESC) {
+                tap_code(KC_RGHT);
+                selwd_state = SELWD_STATE_NONE;
+                return false;
+            }
+            // Fallthrough intended.
+        default:
+            selwd_state = SELWD_STATE_NONE;
+    }
+
+    return true;
+}
+// -----------------------------------------------------------------------------
+// SENTENCE CASE
+
+// https://getreuer.info/posts/keyboards/sentence-case/index.html
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+enum sentence_case_state {
+    SNCSE_STATE_INIT,     /**< Initial enabled state. */
+    SNCSE_STATE_WORD,     /**< Within a word. */
+    SNCSE_STATE_ABBREV,   /**< Within an abbreviation like "e.g.". */
+    SNCSE_STATE_ENDING,   /**< Sentence ended. */
+    SNCSE_STATE_PRIMED,   /**< "Primed" state, in the space following an ending. */
+    SNCSE_STATE_DISABLED, /**< Sentence Case is disabled. */
+};
+#if SENTENCE_CASE_TIMEOUT > 0
+static uint16_t idle_timer = 0;
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+#if SENTENCE_CASE_BUFFER_SIZE > 1
+static uint16_t key_buffer[SENTENCE_CASE_BUFFER_SIZE] = {0};
+#endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+static uint8_t state_history[SENTENCE_CASE_STATE_HISTORY_SIZE];
+static uint16_t suppress_key = KC_NO;
+static uint8_t sentence_state = SNCSE_STATE_INIT;
+
+// Sets the current state to `new_state`.
+static void set_sentence_state(uint8_t new_state) {
+#ifndef NO_DEBUG
+    if (debug_enable && sentence_state != new_state) {
+        static const char* state_names[] = {
+            "INIT", "WORD", "ABBREV", "ENDING", "PRIMED", "DISABLED",
+        };
+        dprintf("Sentence case: %s\n", state_names[new_state]);
+    }
+#endif  // NO_DEBUG
+
+    const bool primed = (new_state == SNCSE_STATE_PRIMED);
+    if (primed != (sentence_state == SNCSE_STATE_PRIMED)) {
+        sentence_case_primed(primed);
+    }
+    sentence_state = new_state;
+}
+
+static void clear_state_history(void) {
+#if SENTENCE_CASE_TIMEOUT > 0
+    idle_timer = 0;
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+    memset(state_history, SNCSE_STATE_INIT, sizeof(state_history));
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        set_sentence_state(SNCSE_STATE_INIT);
+    }
+}
+
+void sentence_case_clear(void) {
+    clear_state_history();
+    suppress_key = KC_NO;
+#if SENTENCE_CASE_BUFFER_SIZE > 1
+    memset(key_buffer, 0, sizeof(key_buffer));
+#endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+}
+
+void sentence_case_on(void) {
+    if (sentence_state == SNCSE_STATE_DISABLED) {
+        sentence_state = SNCSE_STATE_INIT;
+        sentence_case_clear();
+    }
+}
+
+void sentence_case_off(void) {
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        set_sentence_state(SNCSE_STATE_DISABLED);
+    }
+}
+
+void sentence_case_toggle(void) {
+    if (sentence_state != SNCSE_STATE_DISABLED) {
+        sentence_case_off();
+    } else {
+        sentence_case_on();
+    }
+}
+
+bool is_sentence_case_on(void) { return sentence_state != SNCSE_STATE_DISABLED; }
+
+#if SENTENCE_CASE_TIMEOUT > 0
+#if SENTENCE_CASE_TIMEOUT < 100 || SENTENCE_CASE_TIMEOUT > 30000
+// Constrain timeout to a sensible range. With the 16-bit timer, the longest
+// representable timeout is 32768 ms, rounded here to 30000 ms = half a minute.
+#error "sentence_case: SENTENCE_CASE_TIMEOUT must be between 100 and 30000 ms"
+#endif
+
+void sentence_case_task(void) {
+    if (idle_timer && timer_expired(timer_read(), idle_timer)) {
+        clear_state_history();  // Timed out; clear all state.
+    }
+}
+#endif  // SENTENCE_CASE_TIMEOUT > 0
+
+bool process_sentence_case(uint16_t keycode, keyrecord_t* record) {
+    // Only process while enabled, and only process press events.
+    if (sentence_state == SNCSE_STATE_DISABLED || !record->event.pressed) {
+        return true;
+    }
+
+    #if SENTENCE_CASE_TIMEOUT > 0
+    idle_timer = (record->event.time + SENTENCE_CASE_TIMEOUT) | 1;
+    #endif  // SENTENCE_CASE_TIMEOUT > 0
+
+    switch (keycode) {
+    #ifndef NO_ACTION_TAPPING
+        case QK_MOD_TAP ... QK_MOD_TAP_MAX:
+        if (record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_MOD_TAP_GET_TAP_KEYCODE(keycode);
+        break;
+    #ifndef NO_ACTION_LAYER
+        case QK_LAYER_TAP ... QK_LAYER_TAP_MAX:
+    #endif  // NO_ACTION_LAYER
+        if (record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_LAYER_TAP_GET_TAP_KEYCODE(keycode);
+        break;
+    #endif  // NO_ACTION_TAPPING
+
+    #ifdef SWAP_HANDS_ENABLE
+        case QK_SWAP_HANDS ... QK_SWAP_HANDS_MAX:
+        if (IS_SWAP_HANDS_KEYCODE(keycode) || record->tap.count == 0) {
+            return true;
+        }
+        keycode = QK_SWAP_HANDS_GET_TAP_KEYCODE(keycode);
+        break;
+    #endif  // SWAP_HANDS_ENABLE
+    }
+
+    if (keycode == KC_BSPC) {
+        // Backspace key pressed. Rewind the state and key buffers.
+        // BUG: I don't think sentence case will work with control backspace...
+        set_sentence_state(state_history[SENTENCE_CASE_STATE_HISTORY_SIZE - 1]);
+
+        memmove(state_history + 1, state_history, SENTENCE_CASE_STATE_HISTORY_SIZE - 1);
+        state_history[0] = SNCSE_STATE_INIT;
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+        memmove(key_buffer + 1, key_buffer,
+                (SENTENCE_CASE_BUFFER_SIZE - 1) * sizeof(uint16_t));
+        key_buffer[0] = KC_NO;
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+        return true;
+    }
+
+    const uint8_t mods = get_mods() | get_weak_mods() | get_oneshot_mods();
+    uint8_t new_state = SNCSE_STATE_INIT;
+
+    // We search for sentence beginnings using a simple finite state machine. It
+    // matches things like "a. a" and "a.  a" but not "a.. a" or "a.a. a". The
+    // state transition matrix is:
+    //
+    //             'a'       '.'      ' '      '\''
+    //           +-------------------------------------
+    //   INIT    | WORD      INIT     INIT     INIT
+    //   WORD    | WORD      ENDING   INIT     WORD
+    //   ABBREV  | ABBREV    ABBREV   INIT     ABBREV
+    //   ENDING  | ABBREV    INIT     PRIMED   ENDING
+    //   PRIMED  | match!    INIT     PRIMED   PRIMED
+    char code = sentence_case_press_user(keycode, record, mods);
+    dprintf("Sentence Case: code = '%c' (%d)\n", code, (int)code);
+    switch (code) {
+        case '\0':  // Current key should be ignored.
+        return true;
+
+        case 'a':  // Current key is a letter.
+        switch (sentence_state) {
+            case SNCSE_STATE_ABBREV:
+            case SNCSE_STATE_ENDING:
+            new_state = SNCSE_STATE_ABBREV;
+            break;
+
+            case SNCSE_STATE_PRIMED:
+            // This is the start of a sentence.
+            if (keycode != suppress_key) {
+                suppress_key = keycode;
+                set_oneshot_mods(MOD_BIT(KC_LSFT));  // Shift mod to capitalize.
+                new_state = SNCSE_STATE_WORD;
+            }
+            break;
+
+            default:
+            new_state = SNCSE_STATE_WORD;
+        }
+        break;
+
+        case '.':  // Current key is sentence-ending punctuation.
+        switch (sentence_state) {
+            case SNCSE_STATE_WORD:
+            new_state = SNCSE_STATE_ENDING;
+            break;
+
+            default:
+            new_state = SNCSE_STATE_ABBREV;
+        }
+        break;
+
+        case ' ':  // Current key is a space.
+        if (sentence_state == SNCSE_STATE_PRIMED ||
+            (sentence_state == SNCSE_STATE_ENDING
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+            && sentence_case_check_ending(key_buffer)
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+                )) {
+            new_state = SNCSE_STATE_PRIMED;
+            suppress_key = KC_NO;
+        }
+        break;
+
+        case '\'':  // Current key is a quote.
+        new_state = sentence_state;
+        break;
+    }
+
+    // Slide key_buffer and state_history buffers one element to the left.
+    // Optimization note: Using manual loops instead of memmove() here saved
+    // ~100 bytes on AVR.
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    for (int8_t i = 0; i < SENTENCE_CASE_BUFFER_SIZE - 1; ++i) {
+        key_buffer[i] = key_buffer[i + 1];
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+    for (int8_t i = 0; i < SENTENCE_CASE_STATE_HISTORY_SIZE - 1; ++i) {
+        state_history[i] = state_history[i + 1];
+    }
+
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    key_buffer[SENTENCE_CASE_BUFFER_SIZE - 1] = keycode;
+    if (new_state == SNCSE_STATE_ENDING && !sentence_case_check_ending(key_buffer)) {
+        dprintf("Not a real ending.\n");
+        new_state = SNCSE_STATE_INIT;
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+    state_history[SENTENCE_CASE_STATE_HISTORY_SIZE - 1] = sentence_state;
+
+    set_sentence_state(new_state);
+    return true;
+}
+
+bool sentence_case_just_typed_P(const uint16_t* buffer, const uint16_t* pattern,
+                                int8_t pattern_len) {
+    #if SENTENCE_CASE_BUFFER_SIZE > 1
+    buffer += SENTENCE_CASE_BUFFER_SIZE - pattern_len;
+    for (int8_t i = 0; i < pattern_len; ++i) {
+        if (buffer[i] != pgm_read_word(pattern + i)) {
+        return false;
+        }
+    }
+    return true;
+    #else
+    return false;
+    #endif  // SENTENCE_CASE_BUFFER_SIZE > 1
+}
+
+__attribute__((weak)) bool sentence_case_check_ending(const uint16_t* buffer) {
+    #if SENTENCE_CASE_BUFFER_SIZE >= 5
+    // Don't consider the abbreviations "vs." and "etc." to end the sentence.
+    if (SENTENCE_CASE_JUST_TYPED(KC_SPC, KC_V, KC_S, KC_DOT) ||
+        SENTENCE_CASE_JUST_TYPED(KC_SPC, KC_E, KC_T, KC_C, KC_DOT)) {
+        return false;  // Not a real sentence ending.
+    }
+    #endif  // SENTENCE_CASE_BUFFER_SIZE >= 5
+    return true;  // Real sentence ending; capitalize next letter.
+}
+
+__attribute__((weak)) char sentence_case_press_user(uint16_t keycode,
+                                                    keyrecord_t* record,
+                                                    uint8_t mods) {
+    if ((mods & ~(MOD_MASK_SHIFT | MOD_BIT(KC_RALT))) == 0) {
+        const bool shifted = mods & MOD_MASK_SHIFT;
+        switch (keycode) {
+        case KC_LCTL ... KC_RGUI:  // Mod keys.
+            return '\0';  // These keys are ignored.
+
+        case KC_A ... KC_Z:
+            return 'a';  // Letter key.
+
+        case KC_DOT:  // . is punctuation, Shift . is a symbol (>)
+            return !shifted ? '.' : '#';
+        case KC_1:
+        case KC_SLSH:
+            return shifted ? '.' : '#';
+        case KC_2 ... KC_0:  // 2 3 4 5 6 7 8 9 0
+        case KC_MINS ... KC_SCLN:  // - = [ ] ; backslash
+        case KC_GRV:
+        case KC_COMM:
+            return '#';  // Symbol key.
+
+        case KC_SPC:
+            return ' ';  // Space key.
+
+        case KC_QUOT:
+            return '\'';  // Quote key.
+        case KC_DQOT:
+            return '\'';  // Quote key alternate
+        }
+    }
+
+    // Otherwise clear Sentence Case to initial state.
+    sentence_case_clear();
+    return '\0';
+}
+
+__attribute__((weak)) void sentence_case_primed(bool primed) {}
+
+///////////////////////////////////////////////////////////////////////////////
 // ----------------------------------------------------------------------------
 // OLED
 
@@ -582,11 +1348,47 @@ bool oled_task_user(void) {
 
 #endif
 
-layer_state_t layer_state_set_user(layer_state_t state) {
-    return update_tri_layer_state(state, _EXTND, _RAISE, _ADJUST);
-}
-
+///////////////////////////////////////////////////////////////////////////////
+// ----------------------------------------------------------------------------
+// Process Record
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+
+    // MACROS OVERWRITING BEHAVIOUR:
+    // Sentence Case
+    if (!process_sentence_case(keycode, record)) { return false; }
+
+    // Select Word
+    if (!process_select_word(keycode, record, KC_SLWD)) { return false; }
+
+    // int rep_keycode = get_alt_repeat_key_keycode();
+    // int rep_mods = get_mods();
+
+    // If alt repeating a key A-Z with no mods other than Shift, set the last key
+    // to KC_N. Above, alternate repeat of KC_N is defined to be again KC_N. This
+    // way, either tapping alt repeat and then repeat (or double tapping alt
+    // repeat) is useful to type certain patterns without SFBs:
+    //
+    //   O <altrep> <rep> -> OAN (as in "loan")
+    //   D <altrep> <rep> -> DYN (as in "dynamic")
+
+    if (get_repeat_key_count() < 0 && KC_A <= keycode && keycode <= KC_Z && keycode != KC_N && (get_last_mods() & ~MOD_MASK_SHIFT) == 0) {
+        set_last_keycode(KC_N);
+        set_last_mods(0);
+    }
+
+    // Clear alt-tab behaviour
+    if (is_alt_tab_active) {
+        if (timer_elapsed(alt_tab_timer) > ALT_TAB_TIMEOUT) {
+            if (keymap_config.swap_lctl_lgui) {
+                unregister_mods(MOD_LGUI);
+            }
+            else {
+                unregister_mods(MOD_LALT);
+            }
+            is_alt_tab_active = false;
+        }
+    }
+
     switch (keycode) {
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Base Layer Switchers
@@ -620,7 +1422,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Built-in Shortcuts
+        // New Shortcuts and Commands
         case KC_PRVWD:
             if (record->event.pressed) {
                 if (keymap_config.swap_lctl_lgui) {
@@ -630,7 +1432,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     register_mods(mod_config(MOD_LCTL));
                     register_code(KC_LEFT);
                 }
-            } else {
+                return false;
+                break;
+            }
+            else {
                 if (keymap_config.swap_lctl_lgui) {
                     unregister_mods(mod_config(MOD_LALT));
                     unregister_code(KC_LEFT);
@@ -638,18 +1443,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     unregister_mods(mod_config(MOD_LCTL));
                     unregister_code(KC_LEFT);
                 }
+                return false;
+                break;
             }
-            break;
         case KC_NXTWD:
             if (record->event.pressed) {
                 if (keymap_config.swap_lctl_lgui) {
-                    register_mods(mod_config(MOD_LALT));
-                    register_code(KC_RIGHT);
+                register_mods(mod_config(MOD_LALT));
+                register_code(KC_RIGHT);
                 } else {
                     register_mods(mod_config(MOD_LCTL));
                     register_code(KC_RIGHT);
                 }
-            } else {
+                return false;
+                break;
+            }
+            else {
                 if (keymap_config.swap_lctl_lgui) {
                     unregister_mods(mod_config(MOD_LALT));
                     unregister_code(KC_RIGHT);
@@ -657,17 +1466,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     unregister_mods(mod_config(MOD_LCTL));
                     unregister_code(KC_RIGHT);
                 }
+                return false;
+                break;
             }
-            break;
         case KC_LSTRT:
             if (record->event.pressed) {
                 if (keymap_config.swap_lctl_lgui) {
-                     //CMD-arrow on Mac, but we have CTL and GUI swapped
+                    //CMD-arrow on Mac, but we have CTL and GUI swapped
                     register_mods(mod_config(MOD_LCTL));
                     register_code(KC_LEFT);
                 } else {
                     register_code(KC_HOME);
                 }
+                return false;
+                break;
             } else {
                 if (keymap_config.swap_lctl_lgui) {
                     unregister_mods(mod_config(MOD_LCTL));
@@ -675,8 +1487,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     unregister_code(KC_HOME);
                 }
+                return false;
+                break;
             }
-            break;
         case KC_LEND:
             if (record->event.pressed) {
                 if (keymap_config.swap_lctl_lgui) {
@@ -686,6 +1499,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     register_code(KC_END);
                 }
+                return false;
+                break;
             } else {
                 if (keymap_config.swap_lctl_lgui) {
                     unregister_mods(mod_config(MOD_LCTL));
@@ -693,58 +1508,402 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     unregister_code(KC_END);
                 }
+                return false;
+                break;
             }
-            break;
         case KC_DLINE:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
                 register_code(KC_BSPC);
+                return false;
+                break;
             } else {
                 unregister_mods(mod_config(MOD_LCTL));
                 unregister_code(KC_BSPC);
+                return false;
+                break;
             }
-            break;
         case KC_COPY:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
                 register_code(KC_C);
+                return false;
             } else {
                 unregister_mods(mod_config(MOD_LCTL));
                 unregister_code(KC_C);
+                return false;
             }
-            return false;
         case KC_PASTE:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
                 register_code(KC_V);
+                return false;
             } else {
                 unregister_mods(mod_config(MOD_LCTL));
                 unregister_code(KC_V);
+                return false;
             }
-            return false;
         case KC_CUT:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
                 register_code(KC_X);
+                return false;
             } else {
                 unregister_mods(mod_config(MOD_LCTL));
                 unregister_code(KC_X);
+                return false;
             }
-            return false;
-            break;
         case KC_UNDO:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
                 register_code(KC_Z);
+                return false;
             } else {
                 unregister_mods(mod_config(MOD_LCTL));
                 unregister_code(KC_Z);
+                return false;
             }
-            return false;
+        case KC_REDO:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_Y);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_Y);
+                return false;
+            }
+        case KC_FIND:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_F);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_F);
+                return false;
+            }
+        case KC_PRNT:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_P);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_P);
+                return false;
+            }
+        case KC_SLAL:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_A);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_A);
+                return false;
+            }
+        case KC_CNEW:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_N);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_N);
+                return false;
+            }
+        case KC_TNEW:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_T);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_T);
+                return false;
+            }
+        case KC_CLSE:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_W);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_W);
+                return false;
+            }
+        case KC_RFSH:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_R);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_R);
+                return false;
+            }
+        case KC_SAVE:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_S);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_S);
+                return false;
+            }
+        case KC_ATAB:
+            // Special Alt-Tab key behaviour:
+            // https://docs.splitkb.com/hc/en-us/articles/360010513760-How-can-I-use-a-rotary-encoder-
+            // Start by pressing ALT(CMD)-TAB
+            // Hold ALT(CMD), and press TAB to cycle
+            // Stop holding ALT(CMD) after finished
+            if (record->event.pressed) {
+                if (!is_alt_tab_active) {
+                    is_alt_tab_active = true;
+                    get_os();
+
+                    if (keymap_config.swap_lctl_lgui) {
+                        register_mods(MOD_LGUI);
+                    }
+                    else {
+                        register_mods(MOD_LALT);
+                    }
+                }
+                alt_tab_timer = timer_read();
+                register_code(KC_TAB);
+                return false;
+                break;
+            } else {
+                unregister_code(KC_TAB);
+                return false;
+            }
+        case KC_ZMIN:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_EQL);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_EQL);
+                return false;
+            }
+        case KC_ZMOT:
+            if (record->event.pressed) {
+                register_mods(mod_config(MOD_LCTL));
+                register_code(KC_MINS);
+                return false;
+            } else {
+                unregister_mods(mod_config(MOD_LCTL));
+                unregister_code(KC_MINS);
+                return false;
+            }
+
+        // customized brackets and parens macros
+        case KC_CBRC:
+            if (record->event.pressed) {
+                // Type {} and put cursor in middle
+                MAGIC_STRING("{}", KC_CBRC);  // send {} with { as repeat
+                tap_code(KC_LEFT);
+                set_last_keycode(KC_CBRC);
+                return false;
+                break;
+            }
+        case KC_SBRC:
+            if (record->event.pressed) {
+                // Type [] and put cursor in middle
+                // Shifting handled by autoshift.
+                MAGIC_STRING("[]", KC_SBRC);  // send <> with < as repeat
+                tap_code(KC_LEFT);
+                set_last_keycode(KC_SBRC);
+                return false;
+                break;
+            }
+        case KC_9PRC:
+            if (record->event.pressed) {
+                set_last_keycode(KC_9PRC);
+                return true;
+                break;
+            }
+        // I've decided not to do <> because we often type less than or greater than by itself.
+        // case KC_LABK:
+        //     if (record->event.pressed) {
+        //         // Type <> and put cursor in middle
+        //         MAGIC_STRING("<>", KC_LABK);  // send <> with < as repeat
+        //         tap_code(KC_LEFT);
+        //         set_last_keycode(KC_LABK);
+        //         return false;
+        //         break;
+        //     }
+
+        // customized snipping tool macro
+        case KC_SNIP:
+            if (record->event.pressed) {
+                get_os();
+                // Using OS Detection
+                // BUG: this ignores the mac/windows key.
+                switch (hostos) {
+                    case OS_MACOS: 
+                        register_mods(MOD_LGUI);
+                        register_mods(MOD_LSFT);
+                        register_code(KC_4);
+                        break;
+                    case OS_WINDOWS:
+                        register_mods(MOD_LGUI);
+                        register_mods(MOD_LSFT);
+                        register_code(KC_S);
+                        break;
+                    case OS_LINUX:
+                        register_mods(MOD_LSFT);
+                        register_code(KC_PSCR);
+                        break;
+                    case OS_UNSURE:
+                        // could be android?
+                        register_code(KC_PSCR);
+                        break;
+                    case OS_IOS:
+                        // iPad has command+shift+4?
+                        register_mods(MOD_LGUI);
+                        register_mods(MOD_LSFT);
+                        register_code(KC_4);
+                        break;
+                }
+                return false;
+                break;
+            } else {
+                switch (hostos) {
+                    case OS_MACOS: 
+                        unregister_mods(MOD_LGUI);
+                        unregister_mods(MOD_LSFT);
+                        unregister_code(KC_4);
+                        return false;
+                        break;
+                    case OS_WINDOWS:
+                        unregister_mods(MOD_LGUI);
+                        unregister_mods(MOD_LSFT);
+                        unregister_code(KC_S);
+                        return false;
+                        break;
+                    case OS_LINUX:
+                        unregister_mods(MOD_LSFT);
+                        unregister_code(KC_PSCR);
+                        return false;
+                        break;
+                    case OS_UNSURE:
+                        // could be android?
+                        unregister_code(KC_PSCR);
+                        return false;
+                        break;
+                    case OS_IOS:
+                        // iPad has command+shift+4?
+                        unregister_mods(MOD_LGUI);
+                        unregister_mods(MOD_LSFT);
+                        unregister_code(KC_4);
+                        return false;
+                        break;
+                }
+                break;
+            }
+
+        // TAP HOLD
+        case C_BKSP:
+            if (record->event.pressed) {
+                // Custom backspace
+                // Delete both brackets when backspacing afterwards
+                // DOES NOT WORK.
+                switch (get_last_keycode()) {
+                    case KC_9PRC:
+                    case KC_LPRN:
+                    case KC_CANG:
+                    case KC_LABK:
+                    case KC_CBRC:
+                    case KC_SBRC:
+                        tap_code(KC_DEL);
+                }
+                return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
+            } else {
+                return true;  // THIS MUST BE TRUE OTHERWISE SHORT BACKSPACE WON'T STOP
+            }
+        case C_ENTR:
+            if (record->event.pressed) {
+                return process_tap_or_long_press_key(record, LCTL(KC_ENT));  // on long press, control enter
+            }
+        case C_SRCH:
+            if (record->event.pressed) {
+                // Custom search
+                return process_tap_or_long_press_key(record, KC_SRCHB);  // on long press, open browser before searching
+            }
+
+        // Browser search key
+        case KC_SRCHB:
+            if (record->event.pressed) {
+                get_os();
+                // copy
+                if (keymap_config.swap_lctl_lgui) {
+                    // MacOS Users (bleh)
+                    SEND_STRING(SS_LGUI("c"));
+                }
+                else {
+                    SEND_STRING(SS_LCTL("c"));
+                }
+                // open browser
+                // https://gist.github.com/panzerstadt/51bce7f94859a0fda728fae1cbfbb963
+                SEND_STRING(SS_DELAY(100) SS_TAP(X_LGUI) SS_DELAY(200) "browser" SS_DELAY(750) SS_TAP(X_ENT) SS_DELAY(1250));
+                // open new tab and search
+                if (keymap_config.swap_lctl_lgui) {
+                    // MacOS Users (bleh)
+                    SEND_STRING(SS_LGUI("v") SS_TAP(X_ENTER));
+                }
+                else {
+                    SEND_STRING(SS_LCTL("v") SS_TAP(X_ENTER));
+                }
+                return false;
+                break;
+            } else {
+                return false;
+            }
+
+        case KC_SRCH:
+            if (record->event.pressed) {
+                get_os();
+                // 1. copy highlighted selection
+                // register_code16(KC_COPY);  // reusing this doesn't seem to work
+                if (keymap_config.swap_lctl_lgui) {
+                    // MacOS Users (bleh)
+                    SEND_STRING(SS_LGUI("ct") SS_DELAY(200) SS_LGUI("v") SS_TAP(X_ENTER));
+                }
+                else {
+                    SEND_STRING(SS_LCTL("ct") SS_DELAY(200) SS_LCTL("v") SS_TAP(X_ENTER));
+                }
+                return false;
+                break;
+            }
     }
     return true;
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------
+// MATRIX SCAN
+void matrix_scan_user(void) {
+    // Check for end of alt-tab behaviour
+    if (is_alt_tab_active) {
+        if (timer_elapsed(alt_tab_timer) > ALT_TAB_TIMEOUT) {
+            if (keymap_config.swap_lctl_lgui) {
+                unregister_mods(MOD_LGUI);
+            }
+            else {
+                unregister_mods(MOD_LALT);
+            }
+            is_alt_tab_active = false;
+        }
+    }
+    #if SELECT_WORD_TIMEOUT > 0
+    // Check for end of select word behaviour
+    select_word_task();
+    #endif
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 // ---------------------------------------------------------------------------------------------------------
 // ENCODERS
 #if defined(ENCODER_MAP_ENABLE)
