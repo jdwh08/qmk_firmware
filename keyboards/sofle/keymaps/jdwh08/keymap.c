@@ -3,7 +3,6 @@
 #include "sentence_case.h"
 
 // NOTE: This firmware is too big for the default Atmega32u4/Pro-Micro controller. I'm using RP2040/Elite-Pi.
-// TODO: Bind Q to QU, register last key to U, and fix anything that this breaks
 
 // TODO:? Change sentence case to use backspace to undo the capitalization? w/ (https://getreuer.info/posts/keyboards/triggers/index.html#based-on-previously-typed-keys)
 // TODO: Add dynamic macros https://docs.qmk.fm/#/feature_dynamic_macros
@@ -16,8 +15,6 @@
 // TODO: Mouse cursor layer on RAISE VMLSTR? https://docs.qmk.fm/#/feature_mouse_keys
 // TODO: Lock? https://docs.qmk.fm/#/feature_secure
 // TODO: Aussie/Cursive/ZALGO/etc. https://github.com/drashna/qmk_userspace/blob/04579e566c5b038c2027a1def733b870f532f11a/users/drashna/keyrecords/unicode.c#L4
-
-// TODO: Swap the *NH row to be H*N? (empahsize the magic)
 
 // BUGS:
 // Sentence case disables capsword.
@@ -42,6 +39,9 @@ enum custom_keycodes {
     ALTREP3,
     ALTREP4,
 
+    // Q -> QU
+    KC_QU,
+
     // Extra Functions
     KC_SLWD,  // select word
     KC_SRCH,  // search selection in browser (assume browser open)
@@ -57,6 +57,7 @@ enum custom_keycodes {
     KC_RFSH,  // refresh LCTL(KC_R)
     KC_SAVE,  // save LCTL(KC_S)
     KC_ATAB,  // alt tab LALT(KC_TAB)
+    KC_CTAB,  // control tab LCTL(KC_TAB)
     KC_ZMIN,  // zoom in w/ LCTL(KC_EQL) 
     KC_ZMOT,  // zoom out w/ LCTL(KC_MINS)
 
@@ -75,6 +76,9 @@ enum custom_keycodes {
 #define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
 #define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
 #define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
+#define C_PRVWD LT(0, KC_PRVWD)  // previous word on tap; LSTART on hold
+#define C_NXTWD LT(0, KC_NXTWD)  // next word on tap; LEND on hold
+#define C_BRC LT(0, KC_SBRC)  // square bracket on tap; curly bracket on hold
 
 /////////////////////////////////////////////////////////////////////////
 // LAYERS
@@ -121,11 +125,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | ESC  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |  -   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |  `   |   V  |   M  |   L  |   C  |   P  |                    |   B  | MAGIC|   U  |   O  |   Q  |  /   |
+ * |  `   |   V  |   M  |   L  |   C  |   P  |                    |   B  |   H  |   U  |   O  |   Q  |  /   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |   S  |   T  |   R  |   D  |   Y  |-------.    ,-------|   F  |   N  |   E  |   A  |   I  |  '   |
+ * | Tab  |   S  |   T  |   R  |   D  |   Y  |-------.    ,-------|   F  | MAGIC|   E  |   A  |   I  |  '   |
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
- * |LShift|   X  |   K  |   J  |   G  |   W  |-------|    |-------|   Z  |   H  |   ,  |   .  |   ;  |  +   |
+ * |LShift|   X  |   K  |   J  |   G  |   W  |-------|    |-------|   Z  |   N  |   ,  |   .  |   ;  |  +   |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI | LCTR |EXTND2|Enter | /Space  /       \Bkspc \  |REPEAT|RAISE | RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
@@ -134,20 +138,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_STRDY] = LAYOUT(
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
-  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B,  QK_AREP,    KC_U,    KC_O,    KC_Q,  KC_SLSH,
-  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,     KC_N,    KC_E,    KC_A,    KC_I,  KC_DQOT,
-  KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_H, KC_COMM,  KC_DOT, KC_SCLN,  KC_EQUAL,
+  KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B,     KC_H,    KC_U,    KC_O,    KC_QU,  KC_SLSH,
+  KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,  QK_AREP,    KC_E,    KC_A,    KC_I,  KC_DQOT,
+  KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_N, KC_COMM,  KC_DOT, KC_SCLN,  KC_EQUAL,
     KC_LGUI,KC_LCTL,TT(_EXTND),C_ENTR, KC_SPC,                    C_BKSP, QK_REP, TT(_RAISE), KC_RALT, CW_TOGG
 ),
 /* EXTEND2
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |xBASEx|  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | `ESC |Print |BSrcSl|Close |Refrsh|  {   |                    | Snip | MAGIC|PrvWd |UpArrw| NxtWd|   /  |
+ * | `ESC |Print |BSrcSl|Close |Refrsh| SNIP |                    | CNEW | CTAB |PrvWd |UpArrw| NxtWd|   /  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  | Save |SrchSl| Del  |Selwrd|  [   |-------.    ,-------| Find |AltTab|LArrw |DnArrw| RArrw|   '  |
+ * | Tab  | Save |SrchSl| Del  |Selwrd|  [{  |-------.    ,-------| Find |MAGIC |LArrw |DnArrw| RArrw|   '  |
  * |------+------+------+------+------+------|  MUTE |    | PAUSE |------+------+------+------+------+------|
- * |LShift| Undo | Cut  | Copy | Paste| Redo |-------|    |-------|SlctAl|C(New)|   ,  |   .  |   ;  |   +  |
+ * |LShift| Undo | Cut  | Copy | Paste| Redo |-------|    |-------|SlctAl| ATAB |   ,  |   .  |   ;  |   +  |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI |      | LCTR |Enter | /Space  /       \Bkspc \  |REPEAT|ADJUST| RAlt | Caps |
  *            |      |      |      |      |/       /         \      \ |      |      |      | Word |
@@ -155,19 +159,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_EXTND] = LAYOUT(
   TG(_EXTND),  KC_F1,   KC_F2,     KC_F3,       KC_F4,     KC_F5,                       KC_F6,      KC_F7,    KC_F8,   KC_F9,   KC_F10,   KC_F12,
-  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_CBRC,                     KC_SNIP,    _______, KC_PRVWD,   KC_UP, KC_NXTWD,  _______,
-  _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,   KC_SBRC,                     KC_FIND,    KC_ATAB,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
-  _______,   KC_UNDO,   KC_CUT,  KC_COPY,    KC_PASTE,   KC_REDO, _______,   _______, KC_SLAL,    KC_CNEW,  _______, _______,  _______,  _______,
+  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_SNIP,                     KC_CNEW,    KC_CTAB,   C_PRVWD,  KC_UP,  C_NXTWD,  _______,
+  _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,    C_BRC,                      KC_FIND,    _______,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
+  _______,   KC_UNDO,   KC_CUT,  KC_COPY,    KC_PASTE,   KC_REDO, _______,   _______, KC_SLAL,    KC_ATAB,  _______, _______,  _______,  _______,
                     _______, _______, _______, _______, _______,                       _______, _______, _______, _______, _______
 ),
 /* RAISE
- * ,----------------------------------------.                    ,-----------------------------------------.
+ * ,----------------------------------------.                     ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * | Esc  | Ins  | Pscr | Menu |      |      |                    |      | PWrd |  Up  | NWrd | DLine| Bspc |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * | Tab  | LAt  | LCtl |LShift|      | Caps |-------.    ,-------|      | Left | Down | Rigth|  Del | Bspc |
- * |------+------+------+------+------+------|  MUTE  |    |       |------+------+------+------+------+------|
+ * |------+------+------+------+------+------|  MUTE |    |       |------+------+------+------+------+------|
  * |Shift | Undo |  Cut | Copy | Paste|      |-------|    |-------|      | LStr |      | LEnd |      | Shift|
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            | LGUI | LAlt | LCTR |LOWER | /Enter  /       \Space \  |RAISE | RCTR | RAlt | RGUI |
@@ -185,7 +189,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | QK_BOOT|      |QWERTY|COLEMAK|      |      |                    |      |      |      |      |      |      |
+ * |QK_BOOT|     |QWERTY| STRDY|      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      |MACWIN|      |      |      |-------.    ,-------|      | VOLDO| MUTE | VOLUP|      |      |
  * |------+------+------+------+------+------|  MUTE |    |       |------+------+------+------+------+------|
@@ -475,15 +479,18 @@ enum combos {
     // MAGIC_TWOTAP_C,
     // MAGIC_REP_TAP_C,
     MAGIC_REP_HOLD_C,
+
+    DOUBLE_Q_C,
 };
 
 const uint16_t PROGMEM magic_tap[] = {QK_AREP, COMBO_END};
 const uint16_t PROGMEM magic_hold[] = {QK_AREP, COMBO_END};
-
 const uint16_t PROGMEM rep_tap[] = {QK_REP, COMBO_END};
 const uint16_t PROGMEM rep_hold[] = {QK_REP, COMBO_END};
 // const uint16_t PROGMEM magic_rep_tap[] = {QK_AREP, QK_REP, COMBO_END};
 const uint16_t PROGMEM magic_rep_hold[] = {QK_AREP, QK_REP, COMBO_END};
+
+const uint16_t PROGMEM double_q_tap[] = {KC_QU, QK_REP, COMBO_END};
 
 combo_t key_combos[] = {
     [REP_TAP_C] = COMBO(rep_tap, QK_REP),
@@ -492,8 +499,10 @@ combo_t key_combos[] = {
     // [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, ALTREP3),
     // [MAGIC_TWOTAP_C] = COMBO(magic_twotap, ALTREP3),
     [REP_HOLD_C] = COMBO(rep_hold, ALTREP3),
-    [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, ALTREP4)
+    [MAGIC_REP_HOLD_C] = COMBO(magic_rep_hold, ALTREP4),
     // [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, ALTREP4)
+
+    [DOUBLE_Q_C] = COMBO(double_q_tap, KC_Q),
 };
 
 bool get_combo_must_tap(uint16_t index, combo_t *combo) {
@@ -614,6 +623,8 @@ bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
         case KC_9PRC:  // 9 vs ( macro
         case KC_CANG: // , vs < macro
 
+        case KC_QU:  // QU vs Q
+
     // Default behaviour:
 #    ifndef NO_AUTO_SHIFT_ALPHA
         case KC_A ... KC_Z:
@@ -696,6 +707,14 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
                 set_last_keycode(KC_DQOT);
             }
             break;
+        case KC_QU:
+            if (!shifted) {
+                MAGIC_STRING("qu", KC_U);
+            }
+            else {
+                MAGIC_STRING("Qu", KC_U);
+            }
+            break;
         default:
             if (shifted) {
                 add_weak_mods(MOD_BIT(KC_LSFT));
@@ -743,6 +762,10 @@ void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record)
 // Custom Alt-Tab Key
 bool is_alt_tab_active = false;
 uint16_t alt_tab_timer = 0;
+
+// Custom Control-Tab Key
+bool is_ctrl_tab_active = false;
+uint16_t ctrl_tab_timer = 0;
 // ----------------------------------------------------------------------
 // Tap Hold: Tap vs Long-Press Processing
 // https://getreuer.info/posts/keyboards/triggers/index.html#tap-vs.-long-press
@@ -1331,6 +1354,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
+    // Clear control-tab behaviour
+    if (is_ctrl_tab_active) {
+        if (timer_elapsed(ctrl_tab_timer) > ALT_TAB_TIMEOUT) {
+            unregister_mods(MOD_LCTL);
+            is_ctrl_tab_active = false;
+        }
+    }
+
     switch (keycode) {
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Base Layer Switchers
@@ -1362,6 +1393,66 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 process_magic_key_4(get_last_keycode(), get_last_mods());
             }
             return false;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // New Keycodes
+        // case KC_QU:
+        //     if (record->event.pressed) {
+        //         register_code(KC_Q);
+        //         register_code(KC_U);
+        //     }
+        //     else {
+        //         unregister_code(KC_Q);
+        //         unregister_code(KC_U);
+        //     }
+        //     return false;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TAP HOLD
+        case C_BKSP:
+            if (record->event.pressed) {
+                // Custom backspace
+                // Delete both brackets when backspacing afterwards
+                // DOES NOT WORK.
+                switch (get_last_keycode()) {
+                    case KC_9PRC:
+                    case KC_LPRN:
+                    case KC_CANG:
+                    case KC_LABK:
+                    case KC_CBRC:
+                    case KC_SBRC:
+                        tap_code(KC_DEL);
+                }
+                return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
+            } else {
+                return true;  // THIS MUST BE TRUE OTHERWISE SHORT BACKSPACE WON'T STOP
+            }
+        case C_ENTR:
+            if (record->event.pressed) {
+                return process_tap_or_long_press_key(record, LCTL(KC_ENT));  // on long press, control enter
+            }
+            break;
+        case C_PRVWD:
+            if (record->event.pressed) {
+                return process_tap_or_long_press_key(record, KC_LSTRT);  // on long press, line start
+            }
+            break;
+        case C_NXTWD:
+            if (record->event.pressed) {
+                return process_tap_or_long_press_key(record, KC_LEND);  // on long press, line end
+            }
+            break;
+        case C_BRC:
+            if (record->event.pressed) {
+                return process_tap_or_long_press_key(record, KC_CBRC);  // on long press, curly brackets
+            }
+            break;
+        case C_SRCH:
+            if (record->event.pressed) {
+                // Custom search
+                return process_tap_or_long_press_key(record, KC_SRCHB);  // on long press, open browser before searching
+            }
+            break;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // New Shortcuts and Commands
@@ -1621,6 +1712,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_TAB);
                 return false;
             }
+        case KC_CTAB:
+            // Control tab key behaviour:
+            if (record->event.pressed) {
+                if (!is_ctrl_tab_active) {
+                    is_ctrl_tab_active = true;
+                    register_mods(MOD_LCTL);
+                }
+                ctrl_tab_timer = timer_read();
+                register_code(KC_TAB);
+                return false;
+                break;
+            } else {
+                unregister_code(KC_TAB);
+                return false;
+            }
         case KC_ZMIN:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_LCTL));
@@ -1748,35 +1854,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 break;
             }
 
-        // TAP HOLD
-        case C_BKSP:
-            if (record->event.pressed) {
-                // Custom backspace
-                // Delete both brackets when backspacing afterwards
-                // DOES NOT WORK.
-                switch (get_last_keycode()) {
-                    case KC_9PRC:
-                    case KC_LPRN:
-                    case KC_CANG:
-                    case KC_LABK:
-                    case KC_CBRC:
-                    case KC_SBRC:
-                        tap_code(KC_DEL);
-                }
-                return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
-            } else {
-                return true;  // THIS MUST BE TRUE OTHERWISE SHORT BACKSPACE WON'T STOP
-            }
-        case C_ENTR:
-            if (record->event.pressed) {
-                return process_tap_or_long_press_key(record, LCTL(KC_ENT));  // on long press, control enter
-            }
-        case C_SRCH:
-            if (record->event.pressed) {
-                // Custom search
-                return process_tap_or_long_press_key(record, KC_SRCHB);  // on long press, open browser before searching
-            }
-
         // Browser search key
         case KC_SRCHB:
             if (record->event.pressed) {
@@ -1822,7 +1899,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 break;
             }
     }
-    return true;
+    return process_autocorrect(keycode, record);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 // -------------------------------------------------------
@@ -1838,6 +1915,12 @@ void matrix_scan_user(void) {
                 unregister_mods(MOD_LALT);
             }
             is_alt_tab_active = false;
+        }
+    }
+    if (is_ctrl_tab_active) {
+        if (timer_elapsed(ctrl_tab_timer) > ALT_TAB_TIMEOUT) {
+            unregister_mods(MOD_LCTL);
+            is_ctrl_tab_active = false;
         }
     }
     #if SELECT_WORD_TIMEOUT > 0
