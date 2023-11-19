@@ -340,7 +340,7 @@ static int process_magic_key_2(uint16_t keycode, uint8_t mods) {
         case KC_I: MAGIC_STRING(/*h*/"ze", KC_E); return 2;         // I -> ZE
         case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
         case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW
-        case KC_L: tap_code(KC_L); return 1;                        // L -> Y
+        case KC_L: tap_code(KC_Y); return 1;                        // L -> Y
         case KC_M: MAGIC_STRING(/*m*/"ent", KC_T); return 3;        // M -> ENT
         case KC_N: MAGIC_STRING(/*n*/"ess", KC_S); return 3;        // N -> ESS
         case KC_O: MAGIC_STRING(/*o*/"ut", KC_T); return 2;         // O -> UT
