@@ -9,12 +9,13 @@
 // TODO: Add Steno
 // TODO: Add button for control-alt-del
 
-// TODO: Add button to switch between tabs in same window (control tab) for H
 // TODO: Holding down U/Q in the EXTND layer should jump to start and end of line.
 // TODO: Mouse jiggler? https://github.com/DIYCharles/MouseJiggler
 // TODO: Mouse cursor layer on RAISE VMLSTR? https://docs.qmk.fm/#/feature_mouse_keys
-// TODO: Lock? https://docs.qmk.fm/#/feature_secure
 // TODO: Aussie/Cursive/ZALGO/etc. https://github.com/drashna/qmk_userspace/blob/04579e566c5b038c2027a1def733b870f532f11a/users/drashna/keyrecords/unicode.c#L4
+
+// TODO: Magic delete the word.
+// TODO: Remember the past two characters for fancier magic and to set the last keycode when deleting.
 
 // BUGS:
 // Sentence case disables capsword.
@@ -64,11 +65,13 @@ enum custom_keycodes {
     // Brackets Doubling
     KC_9PRC,  // type 9 or () if shifted
     // C_LPARN,  // helper for ( macro
-    KC_SBRC,  // type [] [squarebracket]
-    KC_CBRC,  // type {} {curlybracket}
+    // KC_SBRC,  // type [] [squarebracket]
+    // KC_CBRC,  // type {} {curlybracket}
     KC_CANG,  // type , or <> if shifted
     // C_LANGB,  // helper for < macro
     KC_DQOT,  // type ""
+
+    // C_LBRC,  // type [] or {} if shifted
 };
 
 // ----------------------------------------------------------
@@ -76,9 +79,11 @@ enum custom_keycodes {
 #define C_BKSP LT(0, KC_BSPC)  // custom backspace; KC_BSPC on tap, control backspace on hold
 #define C_SRCH LT(0, KC_SRCH)  // custom web search key; browser search on tap, open new browser + search on hold
 #define C_ENTR LT(0, KC_ENT)    // custom enter key; enter on tap, control enter on hold
-#define C_PRVWD LT(0, KC_PRVWD)  // previous word on tap; LSTART on hold
-#define C_NXTWD LT(0, KC_NXTWD)  // next word on tap; LEND on hold
-#define C_BRC LT(0, KC_SBRC)  // square bracket on tap; curly bracket on hold
+// #define C_PRVWD LT(0, KC_PRVWD)  // previous word on tap; LSTART on hold
+// #define C_NXTWD LT(0, KC_NXTWD)  // next word on tap; LEND on hold
+// #define C_BRC LT(0, KC_SBRC)  // square bracket on tap; curly bracket on hold
+
+// NOTE: for some reason, the only complex tap-hold function I can get to work is the browser search one.
 
 /////////////////////////////////////////////////////////////////////////
 // LAYERS
@@ -159,8 +164,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_EXTND] = LAYOUT(
   TG(_EXTND),  KC_F1,   KC_F2,     KC_F3,       KC_F4,     KC_F5,                       KC_F6,      KC_F7,    KC_F8,   KC_F9,   KC_F10,   KC_F12,
-  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_SNIP,                     KC_CNEW,    KC_CTAB,   C_PRVWD,  KC_UP,  C_NXTWD,  _______,
-  _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,    C_BRC,                      KC_FIND,    _______,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
+  QK_GESC,   KC_PRNT, KC_SRCHB,  KC_RFSH,     KC_CLSE,   KC_SNIP,                     KC_CNEW,    KC_CTAB,  KC_PRVWD,  KC_UP,  KC_NXTWD,  _______,
+  _______,   KC_SAVE,  KC_SRCH,  KC_SLWD,      KC_DEL,   KC_LBRC,                      KC_FIND,    _______,  KC_LEFT, KC_DOWN,  KC_RGHT,  _______,
   _______,   KC_UNDO,   KC_CUT,  KC_COPY,    KC_PASTE,   KC_REDO, _______,   _______, KC_SLAL,    KC_ATAB,  _______, _______,  _______,  _______,
                     _______, _______, _______, _______, _______,                       _______, _______, _______, _______, _______
 ),
@@ -485,6 +490,14 @@ enum combos {
     MAGIC_REP_HOLD_C,
 
     DOUBLE_Q_C,
+
+    PREVWD_TAP_C,
+    PREVWD_HOLD_C,
+    NEXTWD_TAP_C,
+    NEXTWD_HOLD_C,
+
+    BRC_TAP_C,
+    BRC_HOLD_C,
 };
 
 const uint16_t PROGMEM magic_tap[] = {QK_AREP, COMBO_END};
@@ -495,6 +508,14 @@ const uint16_t PROGMEM rep_hold[] = {QK_REP, COMBO_END};
 const uint16_t PROGMEM magic_rep_hold[] = {QK_AREP, QK_REP, COMBO_END};
 
 const uint16_t PROGMEM double_q_tap[] = {KC_QU, QK_REP, COMBO_END};
+
+const uint16_t PROGMEM prevwd_tap[] = {KC_PRVWD, COMBO_END};
+const uint16_t PROGMEM prevwd_hold[] = {KC_PRVWD, COMBO_END};
+const uint16_t PROGMEM nextwd_tap[] = {KC_NXTWD, COMBO_END};
+const uint16_t PROGMEM nextwd_hold[] = {KC_NXTWD, COMBO_END};
+
+const uint16_t PROGMEM brc_tap[] = {KC_LBRC, COMBO_END};
+const uint16_t PROGMEM brc_hold[] = {KC_LBRC, COMBO_END};
 
 combo_t key_combos[] = {
     [REP_TAP_C] = COMBO(rep_tap, QK_REP),
@@ -507,12 +528,23 @@ combo_t key_combos[] = {
     // [MAGIC_REP_TAP_C] = COMBO(magic_rep_tap, ALTREP4)
 
     [DOUBLE_Q_C] = COMBO(double_q_tap, KC_Q),
+
+    [PREVWD_TAP_C] = COMBO(prevwd_tap, KC_PRVWD),
+    [PREVWD_HOLD_C] = COMBO(prevwd_hold, KC_LSTRT),
+    [NEXTWD_TAP_C] = COMBO(nextwd_tap, KC_NXTWD),
+    [NEXTWD_HOLD_C] = COMBO(nextwd_hold, KC_LEND),
+
+    [BRC_TAP_C] = COMBO_ACTION(brc_tap),
+    [BRC_HOLD_C] = COMBO_ACTION(brc_hold),
 };
 
 bool get_combo_must_tap(uint16_t index, combo_t *combo) {
     switch (index) {
         case MAGIC_TAP_C:  // fallthrough intended obvs
         case REP_TAP_C:
+        case PREVWD_TAP_C:
+        case NEXTWD_TAP_C:
+        case BRC_TAP_C:
         // case MAGIC_REP_TAP_C:
             return true;
     }
@@ -524,6 +556,9 @@ bool get_combo_must_hold(uint16_t index, combo_t *combo) {
         case REP_HOLD_C:  // fallthrough intended obvs
         case MAGIC_HOLD_C:
         case MAGIC_REP_HOLD_C:
+        case PREVWD_HOLD_C:
+        case NEXTWD_HOLD_C:
+        case BRC_HOLD_C:
             return true;
     }
     return false;
@@ -531,14 +566,16 @@ bool get_combo_must_hold(uint16_t index, combo_t *combo) {
 
 uint16_t get_combo_term(uint16_t index, combo_t *combo) {
     switch (index) {
-        case MAGIC_REP_HOLD_C:
-            return COMBO_TERM;
         case MAGIC_HOLD_C:
             return COMBO_TERM+50;
         case REP_HOLD_C:
             return COMBO_TERM+200;
+        case MAGIC_REP_HOLD_C:  // fallthroughs intended
+        case PREVWD_HOLD_C:
+        case NEXTWD_HOLD_C:
+        case BRC_HOLD_C:
+            return COMBO_TERM;
     }
-
     return COMBO_TERM;
 }
 
@@ -546,24 +583,24 @@ bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
     return false;
 }
 
-// void process_combo_event(uint16_t combo_index, bool pressed) {
-//     int rep_keycode = get_alt_repeat_key_keycode();
-//     int rep_mods = get_last_mods();
-    
-//     switch(combo_index) {
-//         case MAGIC_REP_TAP_C:
-//             if (pressed) {
-//                 register_code16(QK_AREP);
-//                 SS_DELAY(200);
-//                 unregister_code16(QK_AREP);
-//             }
-//             break;
-//         case MAGIC_REP_HOLD_C:
-//             if (pressed) {
-//                 process_magic_key_2(rep_keycode, rep_mods);
-//             }
-//     }
-// }
+void process_combo_event(uint16_t combo_index, bool pressed) {
+    switch(combo_index) {
+        case BRC_TAP_C:
+            if (pressed) {
+                MAGIC_STRING("[]", KC_LBRC);
+                tap_code(KC_LEFT);
+                set_last_keycode(KC_LBRC);
+            }
+            break;
+        case BRC_HOLD_C:
+            if (pressed) {
+                MAGIC_STRING("{}", KC_LCBR);
+                tap_code(KC_LEFT);
+                set_last_keycode(KC_LCBR);
+            }
+            break;
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -612,7 +649,8 @@ uint16_t get_autoshift_timeout(uint16_t keycode, keyrecord_t *record) {
 bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
     // AutoShift Block List:
-        case KC_LBRC:  // we have our own { key, no shift
+        // case C_LBRC:  // we have our own { key, no shift
+        case KC_LBRC:
         case C_BKSP:  // don't shift backspace.
         case QK_AREP:  // don't shift magic
         case ALTREP2:
@@ -1423,21 +1461,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         //         unregister_code(KC_U);
         //     }
         //     return false;
+        case KC_LBRC:
+            if (record->event.pressed) {
+                MAGIC_STRING("[]", KC_LBRC);
+                tap_code(KC_LEFT);
+                set_last_keycode(KC_LBRC);
+            }
+            return false;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // TAP HOLD
         case C_BKSP:
             if (record->event.pressed) {
                 // Custom backspace
-                // Delete both brackets when backspacing afterwards
-                // DOES NOT WORK.
+                // BUG: Delete both brackets when backspacing afterwards DOES NOT WORK.
+                // Pretty sure it has something to do with the last_keycode being wrong.
                 switch (get_last_keycode()) {
                     case KC_9PRC:
                     case KC_LPRN:
                     case KC_CANG:
                     case KC_LABK:
-                    case KC_CBRC:
-                    case KC_SBRC:
+                    // case KC_CBRC:
+                    // case KC_SBRC:
+                    case KC_LBRC:
+                    case KC_LCBR:
                         tap_code(KC_DEL);
                 }
                 return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
@@ -1449,21 +1496,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return process_tap_or_long_press_key(record, LCTL(KC_ENT));  // on long press, control enter
             }
             break;
-        case C_PRVWD:
-            if (record->event.pressed) {
-                return process_tap_or_long_press_key(record, KC_LSTRT);  // on long press, line start
-            }
-            break;
-        case C_NXTWD:
-            if (record->event.pressed) {
-                return process_tap_or_long_press_key(record, KC_LEND);  // on long press, line end
-            }
-            break;
-        case C_BRC:
-            if (record->event.pressed) {
-                return process_tap_or_long_press_key(record, KC_CBRC);  // on long press, curly brackets
-            }
-            break;
+        // case C_PRVWD:
+        //     if (record->event.pressed) {
+        //         return process_tap_or_long_press_key(record, KC_LSTRT);  // on long press, line start
+        //     }
+        //     break;
+        // case C_NXTWD:
+        //     if (record->event.pressed) {
+        //         return process_tap_or_long_press_key(record, KC_LEND);  // on long press, line end
+        //     }
+        //     break;
+        // case C_BRC:
+        //     if (record->event.pressed) {
+        //         return process_tap_or_long_press_key(record, KC_CBRC);  // on long press, curly brackets
+        //     }
+        //     break;
         case C_SRCH:
             if (record->event.pressed) {
                 // Custom search
@@ -1766,25 +1813,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
 
         // customized brackets and parens macros
-        case KC_CBRC:
-            if (record->event.pressed) {
-                // Type {} and put cursor in middle
-                MAGIC_STRING("{}", KC_CBRC);  // send {} with { as repeat
-                tap_code(KC_LEFT);
-                set_last_keycode(KC_CBRC);
-                return false;
-                break;
-            }
-        case KC_SBRC:
-            if (record->event.pressed) {
-                // Type [] and put cursor in middle
-                // Shifting handled by autoshift.
-                MAGIC_STRING("[]", KC_SBRC);  // send <> with < as repeat
-                tap_code(KC_LEFT);
-                set_last_keycode(KC_SBRC);
-                return false;
-                break;
-            }
+        // case KC_CBRC:
+        //     if (record->event.pressed) {
+        //         // Type {} and put cursor in middle
+        //         MAGIC_STRING("{}", KC_CBRC);  // send {} with { as repeat
+        //         tap_code(KC_LEFT);
+        //         set_last_keycode(KC_CBRC);
+        //         return false;
+        //         break;
+        //     }
+        // case KC_SBRC:
+        //     if (record->event.pressed) {
+        //         // Type [] and put cursor in middle
+        //         // Shifting handled by autoshift.
+        //         MAGIC_STRING("[]", KC_SBRC);  // send <> with < as repeat
+        //         tap_code(KC_LEFT);
+        //         set_last_keycode(KC_SBRC);
+        //         return false;
+        //         break;
+        //     }
         case KC_9PRC:
             if (record->event.pressed) {
                 set_last_keycode(KC_9PRC);
