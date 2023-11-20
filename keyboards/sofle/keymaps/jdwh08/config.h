@@ -13,9 +13,9 @@ for more options.
 // ------------------------------------------------------------------------------------------------
 // Auto Shift
 #define AUTO_SHIFT_TIMEOUT 160  // should be 135-150ms, but we start longer at 175 to get used to it
-#define AUTO_SHIFT_TIMEOUT_PER_KEY true  // allow for repeating characters if held down
-#define NO_AUTO_SHIFT_TAB true // but don't shift tab.
-#define NO_AUTO_SHIFT_SYMBOLS true  // don't shift symbols; we control this ourselves.
+#define AUTO_SHIFT_TIMEOUT_PER_KEY  // allow for repeating characters if held down
+#define NO_AUTO_SHIFT_TAB // but don't shift tab.
+#define NO_AUTO_SHIFT_SYMBOLS  // don't shift symbols; we control this ourselves.
 
 // ------------------------------------------------------------------------------------------------
 // Alt Tab
@@ -27,8 +27,8 @@ for more options.
 
 // ------------------------------------------------------------------------------------------------
 // Tap-Hold Key Decision
-// #define TAPPING_TERM 175
-#define TAPPING_TERM_PER_KEY true // tap-hold time decision
+// #define TAPPING_TERM 200
+#define TAPPING_TERM_PER_KEY // tap-hold time decision
 
 // ------------------------------------------------------------------------------------------------
 // Tap Toggle Layer Switching
@@ -38,13 +38,13 @@ for more options.
 // ------------------------------------------------------------------------------------------------
 // Caps Word
 #define CAPS_WORD_IDLE_TIMEOUT 5000  // When idle, turn off Caps Word after 5 seconds.
-#define CAPS_WORD_INVERT_ON_SHIFT true  // shift reverses caps
+#define CAPS_WORD_INVERT_ON_SHIFT  // shift reverses caps
 
 // -------------------------------------------------------------------
 // COMBOS
-// #define COMBO_TERM_PER_COMBO
+#define COMBO_TERM_PER_COMBO
 #define COMBO_MUST_HOLD_PER_COMBO
-#define COMBO_MUST_TAP_PER_COMBO
+// #define COMBO_MUST_TAP_PER_COMBO
 #define COMBO_MUST_PRESS_IN_ORDER_PER_COMBO
 
 // ------------------------------------------------------------------------------------------------

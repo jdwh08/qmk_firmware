@@ -258,9 +258,9 @@ uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
         case KC_A: magic_length = 1; return KC_O;         // A -> O
         case KC_B: magic_length = 1; return KC_E;         // B -> E
         case KC_C: magic_length = 1; return KC_K;         // C -> K
-        case KC_D: magic_length = 1; return KC_Y;         // D -> Y
+        case KC_D: magic_length = 1; MAGIC_STRING(/*d*/"ge", KC_E); return KC_NO;        // D -> GE
         case KC_E: magic_length = 1; return KC_U;         // E -> U
-        case KC_F: magic_length = 2; MAGIC_STRING(/*f*/"rom", KC_M); return KC_NO;        // F -> ROM
+        case KC_F: magic_length = 2; MAGIC_STRING(/*f*/"rom", KC_M); return KC_NO;       // F -> ROM
         case KC_G: magic_length = 1; return KC_R;         // G -> R
         case KC_H: magic_length = 2; MAGIC_STRING(/*h*/"en", KC_N); return KC_NO;        // H -> EN
         case KC_I: magic_length = 2; MAGIC_STRING(/*i*/"on", KC_N); return KC_NO;        // I -> ON
@@ -333,13 +333,13 @@ static int process_magic_key_2(uint16_t keycode, uint8_t mods) {
         case KC_A: MAGIC_STRING(/*a*/"ck", KC_K); return 2;         // A -> CK
         case KC_B: MAGIC_STRING(/*b*/"an", KC_N); return 2;         // B -> AN
         case KC_C: tap_code(KC_Y); return 1;                        // C -> Y
-        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE
+        case KC_D: tap_code(KC_Y); return 1;                        // D -> Y
         case KC_E: MAGIC_STRING(/*e*/"nce", KC_E); return 3;        // E -> NCE
         case KC_F: MAGIC_STRING(/*f*/"ound", KC_D); return 4;       // F -> OUND
         case KC_G: tap_code(KC_L); return 1;                        // G -> L
         case KC_H: MAGIC_STRING(/*h*/"ere", KC_E); return 3;        // H -> ERE
         case KC_I: MAGIC_STRING(/*h*/"ze", KC_E); return 2;         // I -> ZE
-        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_J: MAGIC_STRING(/*j*/"oin", KC_N); return 3;        // J -> OIN
         case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW
         case KC_L: tap_code(KC_Y); return 1;                        // L -> Y
         case KC_M: MAGIC_STRING(/*m*/"ent", KC_T); return 3;        // M -> ENT
@@ -384,13 +384,13 @@ static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
         case KC_A: MAGIC_STRING(/*a*/"ble", KC_E); return 3;        // A -> BLE
         case KC_B: MAGIC_STRING(/*a*/"efore", KC_E); return 5;      // B -> EFORE
         case KC_C: tap_code(KC_R); return 1;                        // C -> R
-        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE  // no other d's, so this repeats for now.
+        case KC_D: MAGIC_STRING(/*d*/"uring", KC_G); return 5;      // D -> URING
         case KC_E: MAGIC_STRING(/*e*/"xp", KC_P); return 2;         // E -> XP
         case KC_F: MAGIC_STRING(/*f*/"alse", KC_E); return 4;       // F -> ALSE
         case KC_G: tap_code(KC_Y); return 1;                        // G -> Y
         case KC_H: MAGIC_STRING(/*h*/"aving", KC_G); return 5;      // H -> AVING
         case KC_I: MAGIC_STRING(/*i*/"ous", KC_S); return 3;        // I -> OUS
-        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_J: MAGIC_STRING(/*j*/"ob", KC_B); return 2;         // J -> OB
         case KC_K: MAGIC_STRING(/*k*/"new", KC_W); return 3;        // K -> new
         case KC_L: MAGIC_STRING(/*l*/"at", KC_T); return 2;         // L -> AT
         case KC_M: MAGIC_STRING(/*m*/"ore", KC_E); return 3;        // M -> ORE
@@ -403,7 +403,7 @@ static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
         case KC_S: MAGIC_STRING(/*s*/"how", KC_W); return 3;        // S -> HOW
         case KC_T: MAGIC_STRING(/*t*/"ment", KC_T); return 4;       // T -> MENT
         case KC_U: MAGIC_STRING(/*u*/"se", KC_E); return 2;         // U -> SE
-        case KC_V: MAGIC_STRING(/*v*/"iew", KC_W); return 3;        // V -> IEW  // no other v's, so this repeats for now.
+        case KC_V: MAGIC_STRING(/*v*/"iew", KC_W); return 3;        // V -> IEW
         case KC_W: MAGIC_STRING(/*w*/"ork", KC_K); return 3;        // W -> ORK
         case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3;        // X -> ENO
         case KC_Y: tap_code(KC_C); return 1;                        // Y -> C
@@ -434,13 +434,13 @@ static int process_magic_key_4(uint16_t keycode, uint8_t mods) {
         case KC_A: MAGIC_STRING(/*a*/"bout", KC_T); return 4;       // A -> BOUT
         case KC_B: MAGIC_STRING(/*b*/"etween", KC_N); return 6;     // B -> ETWEEN
         case KC_C: MAGIC_STRING(/*c*/"or", KC_R); return 2;         // C -> OR
-        case KC_D: MAGIC_STRING(/*d*/"ge", KC_E); return 2;         // D -> GE  // no other d's, so this repeats for now.
+        case KC_D: MAGIC_STRING(/*d*/"ifferent", KC_E); return 8;   // D -> IFFERENT
         case KC_E: MAGIC_STRING(/*e*/"very", KC_Y); return 4;       // E -> VERY
         case KC_F: MAGIC_STRING(/*f*/"urther", KC_R); return 6;     // F -> URTHER
         case KC_G: MAGIC_STRING(/*g*/"eneral", KC_L); return 6;     // G -> ENERAL
         case KC_H: MAGIC_STRING(/*h*/"owever", KC_R); return 6;     // H -> OWEVER
         case KC_I: MAGIC_STRING(/*i*/"ble", KC_E); return 3;        // I -> BLE
-        case KC_J: MAGIC_STRING(/*j*/"ust", KC_T); return 3;        // J -> UST  // no other j's, so this repeats for now.
+        case KC_J: MAGIC_STRING(/*j*/"udge", KC_T); return 4;       // J -> UDGE
         case KC_K: MAGIC_STRING(/*k*/"eep", KC_P); return 3;        // K -> EEP
         case KC_L: MAGIC_STRING(/*l*/"ike", KC_E); return 3;        // L -> IKE
         case KC_M: MAGIC_STRING(/*m*/"anage", KC_E); return 5;      // M -> ANAGE
@@ -455,9 +455,9 @@ static int process_magic_key_4(uint16_t keycode, uint8_t mods) {
         case KC_U: MAGIC_STRING(/*u*/"sual", KC_L); return 4;       // U -> SUAL
         case KC_V: MAGIC_STRING(/*v*/"ersion", KC_N); return 6;     // V -> ERSION
         case KC_W: MAGIC_STRING(/*w*/"hich", KC_H); return 4;       // W -> HICH
-        case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3;        // X -> ENO  // no other x's, so this repeats for now.
+        case KC_X: MAGIC_STRING(/*ex*/"ample", KC_E); return 5;     // X -> AMPLE  // TODO: make this trigger off ex instead of X?
         case KC_Y: MAGIC_STRING(/*y*/"esterday", KC_Y); return 8;   // Y -> ESTERDAY
-        case KC_Z: MAGIC_STRING(/*z*/"oom", KC_M); return 3;        // Z -> OOM  // no other z's, so this repeats for now.
+        case KC_Z: MAGIC_STRING(/*z*/"ealous", KC_S); return 6;     // Z -> EALOUS
         case KC_SPC: MAGIC_STRING(/* */"you", KC_U); return 3;      // spc -> YOU
         case KC_QUOT:
         // case KC_DQOT:
@@ -527,6 +527,19 @@ bool get_combo_must_hold(uint16_t index, combo_t *combo) {
             return true;
     }
     return false;
+}
+
+uint16_t get_combo_term(uint16_t index, combo_t *combo) {
+    switch (index) {
+        case MAGIC_REP_HOLD_C:
+            return COMBO_TERM;
+        case MAGIC_HOLD_C:
+            return COMBO_TERM+50;
+        case REP_HOLD_C:
+            return COMBO_TERM+200;
+    }
+
+    return COMBO_TERM;
 }
 
 bool get_combo_must_press_in_order(uint16_t index, combo_t *combo) {
@@ -776,15 +789,11 @@ uint16_t ctrl_tab_timer = 0;
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case C_BKSP:  // custom backspace
-            return 160;
+            return TAPPING_TERM + 100;
         case C_ENTR:   // custom enter
-            return 180;
-        case QK_AREP:  // custom alt-repeat
-            return 160;
-        case QK_REP:  // custom repeat
-            return 220;
+            return TAPPING_TERM + 150;
         default:
-            return TAPPING_TERM;
+            return TAPPING_TERM + 100;  // 100 ms by default? we add 100 to the TAPPING_TERM
     }
 } 
 // Given a tap-hold key event, replaces the hold function with `long_press_keycode`.
