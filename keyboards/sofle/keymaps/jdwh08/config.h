@@ -11,6 +11,10 @@ for more options.
 // #define TAP_CODE_DELAY 12
 
 // ------------------------------------------------------------------------------------------------
+// Magic Key
+#define MAGIC_BKSP_TIMEOUT 2000  // When idle, clear magic backspace length after 0.5 seconds.
+
+// ------------------------------------------------------------------------------------------------
 // Auto Shift
 #define AUTO_SHIFT_TIMEOUT 160  // should be 135-150ms, but we start longer at 175 to get used to it
 #define AUTO_SHIFT_TIMEOUT_PER_KEY  // allow for repeating characters if held down

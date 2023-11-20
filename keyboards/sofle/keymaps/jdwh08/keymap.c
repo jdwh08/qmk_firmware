@@ -9,13 +9,14 @@
 // TODO: Add Steno
 // TODO: Add button for control-alt-del
 
-// TODO: Holding down U/Q in the EXTND layer should jump to start and end of line.
 // TODO: Mouse jiggler? https://github.com/DIYCharles/MouseJiggler
 // TODO: Mouse cursor layer on RAISE VMLSTR? https://docs.qmk.fm/#/feature_mouse_keys
 // TODO: Aussie/Cursive/ZALGO/etc. https://github.com/drashna/qmk_userspace/blob/04579e566c5b038c2027a1def733b870f532f11a/users/drashna/keyrecords/unicode.c#L4
 
 // TODO: Magic delete the word.
 // TODO: Remember the past two characters for fancier magic and to set the last keycode when deleting.
+
+// TODO: Remove the spring ping on the T key.
 
 // BUGS:
 // Sentence case disables capsword.
@@ -215,6 +216,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 ////////////////////////////////////////////////////////////////////////////
 // MAGIC KEY
 uint8_t magic_length = 0;  // length of the string sent out by magic key. used for magic backspace.
+uint16_t magic_timer = 0;  // timer for magic key backspace.
+
+void magic_length_task(void) {
+    if ((magic_length > 0) && timer_expired(timer_read(), magic_timer)) {
+        magic_length = 0;
+    }
+}
 // ----------------------------------------------------------------------------
 // ALT REP KEYS:
 bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
@@ -253,6 +261,8 @@ static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
 
 // DEFAULT: (1tap) - Send the alternate repeat keycode.
 uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
+    magic_timer = 200 + MAGIC_BKSP_TIMEOUT;  // we don't have access to key record here because it's built in, so we're going to use 200.
+
     if ((mods & ~MOD_MASK_SHIFT) == 0) {
         switch (keycode) {
         // For navigating next/previous search results in Vim:
@@ -302,7 +312,7 @@ uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
         case KC_HASH: magic_length = 7; MAGIC_STRING(/*#*/"include", KC_NO); return KC_NO; // # -> include
         case KC_QUOT:
             // Fall through intended.
-        // case KC_DQOT:
+        case KC_DQOT:
             // Shouldn't happen because of auto shift but...
             if ((mods & MOD_MASK_SHIFT) != 0) {
             // magic_length = 1;  // Not done.
@@ -331,40 +341,42 @@ uint16_t get_alt_repeat_key_keycode_user(uint16_t keycode, uint8_t mods) {
 // Option 2: (1hold)
 // https://github.com/Ikcelaks/keyboard_layouts/blob/main/magic_sturdy/QMK_Layout/Moonlander/magic_sturdy/keymap.c
 // https://www.ngrams.info/ for ngrams
-static int process_magic_key_2(uint16_t keycode, uint8_t mods) {
+static int process_magic_key_2(uint16_t keycode, uint8_t mods, keyrecord_t* record) {
+    magic_timer = record->event.time + MAGIC_BKSP_TIMEOUT;
+
     if ((mods & ~MOD_MASK_SHIFT) == 0) {
         switch (keycode) {
         // Behavior for Magic Sturdy's "magic" key -- HOLD
-        case KC_A: MAGIC_STRING(/*a*/"ck", KC_K); return 2;         // A -> CK
-        case KC_B: MAGIC_STRING(/*b*/"an", KC_N); return 2;         // B -> AN
-        case KC_C: tap_code(KC_Y); return 1;                        // C -> Y
-        case KC_D: tap_code(KC_Y); return 1;                        // D -> Y
-        case KC_E: MAGIC_STRING(/*e*/"nce", KC_E); return 3;        // E -> NCE
-        case KC_F: MAGIC_STRING(/*f*/"ound", KC_D); return 4;       // F -> OUND
-        case KC_G: tap_code(KC_L); return 1;                        // G -> L
-        case KC_H: MAGIC_STRING(/*h*/"ere", KC_E); return 3;        // H -> ERE
-        case KC_I: MAGIC_STRING(/*h*/"ze", KC_E); return 2;         // I -> ZE
-        case KC_J: MAGIC_STRING(/*j*/"oin", KC_N); return 3;        // J -> OIN
-        case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3;        // K -> NOW
-        case KC_L: tap_code(KC_Y); return 1;                        // L -> Y
-        case KC_M: MAGIC_STRING(/*m*/"ent", KC_T); return 3;        // M -> ENT
-        case KC_N: MAGIC_STRING(/*n*/"ess", KC_S); return 3;        // N -> ESS
-        case KC_O: MAGIC_STRING(/*o*/"ut", KC_T); return 2;         // O -> UT
-        case KC_P: tap_code(KC_Y); return 1;                        // P -> Y
-        case KC_Q: tap_code(KC_I); return 1;                        // Q -> I
-        case KC_QU: tap_code(KC_I); return 1;                       // QU -> I
-        case KC_R: tap_code(KC_K); return 1;                        // R -> K
-        case KC_S: MAGIC_STRING(/*s*/"ome", KC_E); return 3;        // S -> OME
-        case KC_T: MAGIC_STRING(/*t*/"hen", KC_N); return 3;        // T -> HEN
-        case KC_U: tap_code(KC_E); return 1;                        // U -> E
-        case KC_V: MAGIC_STRING(/*v*/"alue", KC_E); return 4;       // V -> ALUE
-        case KC_W: MAGIC_STRING(/*w*/"ith", KC_H); return 3;        // W -> ITH
-        case KC_X: tap_code(KC_T); return 1;                        // X -> T
-        case KC_Y: MAGIC_STRING(/*y*/"ear", KC_R); return 3;        // Y -> EAR
-        case KC_Z: MAGIC_STRING(/*w*/"one", KC_E); return 3;        // Z -> ONE
-        case KC_SPC: MAGIC_STRING(/* */"and", KC_D); return 3;      // spc -> AND
+        case KC_A: MAGIC_STRING(/*a*/"ck", KC_K); return 2; break;        // A -> CK
+        case KC_B: MAGIC_STRING(/*b*/"an", KC_N); return 2; break;        // B -> AN
+        case KC_C: tap_code(KC_Y); return 1; break;                       // C -> Y
+        case KC_D: tap_code(KC_Y); return 1; break;                       // D -> Y
+        case KC_E: MAGIC_STRING(/*e*/"nce", KC_E); return 3; break;       // E -> NCE
+        case KC_F: MAGIC_STRING(/*f*/"ound", KC_D); return 4; break;      // F -> OUND
+        case KC_G: tap_code(KC_Y); return 1; break;                       // G -> Y
+        case KC_H: MAGIC_STRING(/*h*/"ere", KC_E); return 3; break;       // H -> ERE
+        case KC_I: MAGIC_STRING(/*h*/"ze", KC_E); return 2; break;        // I -> ZE
+        case KC_J: MAGIC_STRING(/*j*/"oin", KC_N); return 3; break;       // J -> OIN
+        case KC_K: MAGIC_STRING(/*k*/"now", KC_W); return 3; break;       // K -> NOW
+        case KC_L: tap_code(KC_Y); return 1; break;                       // L -> Y
+        case KC_M: MAGIC_STRING(/*m*/"ent", KC_T); return 3; break;       // M -> ENT
+        case KC_N: MAGIC_STRING(/*n*/"ess", KC_S); return 3; break;       // N -> ESS
+        case KC_O: MAGIC_STRING(/*o*/"ut", KC_T); return 2; break;        // O -> UT
+        case KC_P: tap_code(KC_Y); return 1; break;                       // P -> Y
+        case KC_Q: tap_code(KC_I); return 1; break;                       // Q -> I
+        case KC_QU: tap_code(KC_I); return 1; break;                      // QU -> I
+        case KC_R: tap_code(KC_K); return 1; break;                       // R -> K
+        case KC_S: MAGIC_STRING(/*s*/"ome", KC_E); return 3; break;       // S -> OME
+        case KC_T: MAGIC_STRING(/*t*/"hen", KC_N); return 3; break;       // T -> HEN
+        case KC_U: tap_code(KC_E); return 1; break;                       // U -> E
+        case KC_V: MAGIC_STRING(/*v*/"alue", KC_E); return 4; break;      // V -> ALUE
+        case KC_W: MAGIC_STRING(/*w*/"ith", KC_H); return 3; break;       // W -> ITH
+        case KC_X: tap_code(KC_T); return 1; break;                       // X -> T
+        case KC_Y: MAGIC_STRING(/*y*/"ear", KC_R); return 3; break;       // Y -> EAR
+        case KC_Z: MAGIC_STRING(/*w*/"one", KC_E); return 3; break;       // Z -> ONE
+        case KC_SPC: MAGIC_STRING(/* */"and", KC_D); return 3; break;     // spc -> AND
         case KC_QUOT:
-        // case KC_DQOT:
+        case KC_DQOT:
             // Shouldn't happen because of auto shift but...
             if ((mods & MOD_MASK_SHIFT) != 0) {
             return 0;
@@ -372,13 +384,16 @@ static int process_magic_key_2(uint16_t keycode, uint8_t mods) {
             else {
             MAGIC_STRING(/*'*/"re", KC_E); return 2;                // ' -> 'RE
             }
+            break;
         }
     }
     return 0;
 }
 
 // Option 3: (2tap)
-static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
+static int process_magic_key_3(uint16_t keycode, uint8_t mods, keyrecord_t* record) {
+    magic_timer = record->event.time + MAGIC_BKSP_TIMEOUT;
+
     if ((mods & ~MOD_MASK_SHIFT) == 0) {
         switch (keycode) {
         // For navigating next/previous search results in Vim:
@@ -386,36 +401,36 @@ static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
         // case KC_N: return KC_N;
 
         // Behavior for Magic Sturdy's "magic" key -- HOLD
-        case KC_A: MAGIC_STRING(/*a*/"ble", KC_E); return 3;        // A -> BLE
-        case KC_B: MAGIC_STRING(/*a*/"efore", KC_E); return 5;      // B -> EFORE
-        case KC_C: tap_code(KC_R); return 1;                        // C -> R
-        case KC_D: MAGIC_STRING(/*d*/"uring", KC_G); return 5;      // D -> URING
-        case KC_E: MAGIC_STRING(/*e*/"xp", KC_P); return 2;         // E -> XP
-        case KC_F: MAGIC_STRING(/*f*/"alse", KC_E); return 4;       // F -> ALSE
-        case KC_G: tap_code(KC_Y); return 1;                        // G -> Y
-        case KC_H: MAGIC_STRING(/*h*/"aving", KC_G); return 5;      // H -> AVING
-        case KC_I: MAGIC_STRING(/*i*/"ous", KC_S); return 3;        // I -> OUS
-        case KC_J: MAGIC_STRING(/*j*/"ob", KC_B); return 2;         // J -> OB
-        case KC_K: MAGIC_STRING(/*k*/"new", KC_W); return 3;        // K -> new
-        case KC_L: MAGIC_STRING(/*l*/"at", KC_T); return 2;         // L -> AT
-        case KC_M: MAGIC_STRING(/*m*/"ore", KC_E); return 3;        // M -> ORE
-        case KC_N: MAGIC_STRING(/*n*/"ext", KC_T); return 3;        // N -> EXT
-        case KC_O: MAGIC_STRING(/*o*/"ver", KC_R); return 3;        // O -> VER
-        case KC_P: MAGIC_STRING(/*p*/"lease", KC_E); return 5;      // P -> LEASE
-        case KC_Q: tap_code(KC_I); return 1;                        // Q -> I
-        case KC_QU: tap_code(KC_I); return 1;                       // QU -> I
-        case KC_R: MAGIC_STRING(/*r*/"ight", KC_T); return 4;       // R -> IGHT
-        case KC_S: MAGIC_STRING(/*s*/"how", KC_W); return 3;        // S -> HOW
-        case KC_T: MAGIC_STRING(/*t*/"ment", KC_T); return 4;       // T -> MENT
-        case KC_U: MAGIC_STRING(/*u*/"se", KC_E); return 2;         // U -> SE
-        case KC_V: MAGIC_STRING(/*v*/"iew", KC_W); return 3;        // V -> IEW
-        case KC_W: MAGIC_STRING(/*w*/"ork", KC_K); return 3;        // W -> ORK
-        case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3;        // X -> ENO
-        case KC_Y: tap_code(KC_C); return 1;                        // Y -> C
-        case KC_Z: MAGIC_STRING(/*z*/"oom", KC_M); return 3;        // Z -> OOM
-        case KC_SPC: MAGIC_STRING(/* */"of", KC_F); return 2;       // spc -> OF
+        case KC_A: MAGIC_STRING(/*a*/"ble", KC_E); return 3; break;       // A -> BLE
+        case KC_B: MAGIC_STRING(/*a*/"efore", KC_E); return 5; break;     // B -> EFORE
+        case KC_C: tap_code(KC_R); return 1; break;                       // C -> R
+        case KC_D: MAGIC_STRING(/*d*/"uring", KC_G); return 5; break;     // D -> URING
+        case KC_E: MAGIC_STRING(/*e*/"xp", KC_P); return 2; break;        // E -> XP
+        case KC_F: MAGIC_STRING(/*f*/"alse", KC_E); return 4; break;      // F -> ALSE
+        case KC_G: tap_code(KC_L); return 1; break;                       // G -> L
+        case KC_H: MAGIC_STRING(/*h*/"aving", KC_G); return 5; break;     // H -> AVING
+        case KC_I: MAGIC_STRING(/*i*/"ous", KC_S); return 3; break;       // I -> OUS
+        case KC_J: MAGIC_STRING(/*j*/"ob", KC_B); return 2; break;        // J -> OB
+        case KC_K: MAGIC_STRING(/*k*/"new", KC_W); return 3; break;       // K -> new
+        case KC_L: MAGIC_STRING(/*l*/"at", KC_T); return 2; break;        // L -> AT
+        case KC_M: MAGIC_STRING(/*m*/"ore", KC_E); return 3; break;       // M -> ORE
+        case KC_N: MAGIC_STRING(/*n*/"ext", KC_T); return 3; break;       // N -> EXT
+        case KC_O: MAGIC_STRING(/*o*/"ver", KC_R); return 3; break;       // O -> VER
+        case KC_P: MAGIC_STRING(/*p*/"lease", KC_E); return 5; break;     // P -> LEASE
+        case KC_Q: tap_code(KC_I); return 1; break;                       // Q -> I
+        case KC_QU: tap_code(KC_I); return 1; break;                      // QU -> I
+        case KC_R: MAGIC_STRING(/*r*/"ight", KC_T); return 4; break;      // R -> IGHT
+        case KC_S: MAGIC_STRING(/*s*/"how", KC_W); return 3; break;       // S -> HOW
+        case KC_T: MAGIC_STRING(/*t*/"ment", KC_T); return 4; break;      // T -> MENT
+        case KC_U: MAGIC_STRING(/*u*/"se", KC_E); return 2; break;        // U -> SE
+        case KC_V: MAGIC_STRING(/*v*/"iew", KC_W); return 3; break;       // V -> IEW
+        case KC_W: MAGIC_STRING(/*w*/"ork", KC_K); return 3; break;       // W -> ORK
+        case KC_X: MAGIC_STRING(/*x*/"eno", KC_O); return 3; break;       // X -> ENO
+        case KC_Y: tap_code(KC_C); return 1; break;                       // Y -> C
+        case KC_Z: MAGIC_STRING(/*z*/"oom", KC_M); return 3; break;       // Z -> OOM
+        case KC_SPC: MAGIC_STRING(/* */"of", KC_F); return 2; break;      // spc -> OF
         case KC_QUOT:
-        // case KC_DQOT:
+        case KC_DQOT:
             // Shouldn't happen because of auto shift but...
             if ((mods & MOD_MASK_SHIFT) != 0) {
             return 0;
@@ -423,12 +438,15 @@ static int process_magic_key_3(uint16_t keycode, uint8_t mods) {
             else {
             MAGIC_STRING(/*'*/"ve", KC_E); return 2;                // ' -> 'VE
             }
+            break;
         }
     }
     return 0;
 }
 // Option 4 (2Hold)
-static int process_magic_key_4(uint16_t keycode, uint8_t mods) {
+static int process_magic_key_4(uint16_t keycode, uint8_t mods, keyrecord_t* record) {
+    magic_timer = record->event.time + MAGIC_BKSP_TIMEOUT;
+
     if ((mods & ~MOD_MASK_SHIFT) == 0) {
         switch (keycode) {
         // For navigating next/previous search results in Vim:
@@ -436,43 +454,44 @@ static int process_magic_key_4(uint16_t keycode, uint8_t mods) {
         // case KC_N: return KC_N;
 
         // Behavior for Magic Sturdy's "magic" key -- HOLD
-        case KC_A: MAGIC_STRING(/*a*/"bout", KC_T); return 4;       // A -> BOUT
-        case KC_B: MAGIC_STRING(/*b*/"etween", KC_N); return 6;     // B -> ETWEEN
-        case KC_C: MAGIC_STRING(/*c*/"or", KC_R); return 2;         // C -> OR
-        case KC_D: MAGIC_STRING(/*d*/"ifferent", KC_E); return 8;   // D -> IFFERENT
-        case KC_E: MAGIC_STRING(/*e*/"very", KC_Y); return 4;       // E -> VERY
-        case KC_F: MAGIC_STRING(/*f*/"urther", KC_R); return 6;     // F -> URTHER
-        case KC_G: MAGIC_STRING(/*g*/"eneral", KC_L); return 6;     // G -> ENERAL
-        case KC_H: MAGIC_STRING(/*h*/"owever", KC_R); return 6;     // H -> OWEVER
-        case KC_I: MAGIC_STRING(/*i*/"ble", KC_E); return 3;        // I -> BLE
-        case KC_J: MAGIC_STRING(/*j*/"udge", KC_T); return 4;       // J -> UDGE
-        case KC_K: MAGIC_STRING(/*k*/"eep", KC_P); return 3;        // K -> EEP
-        case KC_L: MAGIC_STRING(/*l*/"ike", KC_E); return 3;        // L -> IKE
-        case KC_M: MAGIC_STRING(/*m*/"anage", KC_E); return 5;      // M -> ANAGE
-        case KC_N: MAGIC_STRING(/*n*/"othing", KC_G); return 6;     // N -> OTHING
-        case KC_O: MAGIC_STRING(/*o*/"riginal", KC_L); return 7;    // O -> RIGINAL
-        case KC_P: MAGIC_STRING(/*p*/"revious", KC_S); return 8;    // P -> REVIOUS
-        case KC_Q: tap_code(KC_I); return 1;                        // Q -> I
-        case KC_QU: tap_code(KC_I); return 1;                       // QU -> I
-        case KC_R: MAGIC_STRING(/*r*/"eview", KC_W); return 5;      // R -> EVIEW
-        case KC_S: MAGIC_STRING(/*s*/"hould", KC_D); return 5;      // S -> HOULD
-        case KC_T: MAGIC_STRING(/*t*/"hrough", KC_H); return 6;     // T -> HROUGH
-        case KC_U: MAGIC_STRING(/*u*/"sual", KC_L); return 4;       // U -> SUAL
-        case KC_V: MAGIC_STRING(/*v*/"ersion", KC_N); return 6;     // V -> ERSION
-        case KC_W: MAGIC_STRING(/*w*/"hich", KC_H); return 4;       // W -> HICH
-        case KC_X: MAGIC_STRING(/*ex*/"ample", KC_E); return 5;     // X -> AMPLE  // TODO: make this trigger off ex instead of X?
-        case KC_Y: MAGIC_STRING(/*y*/"esterday", KC_Y); return 8;   // Y -> ESTERDAY
-        case KC_Z: MAGIC_STRING(/*z*/"ealous", KC_S); return 6;     // Z -> EALOUS
-        case KC_SPC: MAGIC_STRING(/* */"you", KC_U); return 3;      // spc -> YOU
+        case KC_A: MAGIC_STRING(/*a*/"bout", KC_T); return 4; break;      // A -> BOUT
+        case KC_B: MAGIC_STRING(/*b*/"etween", KC_N); return 6; break;    // B -> ETWEEN
+        case KC_C: MAGIC_STRING(/*c*/"or", KC_R); return 2; break;        // C -> OR
+        case KC_D: MAGIC_STRING(/*d*/"ifferent", KC_E); return 8; break;  // D -> IFFERENT
+        case KC_E: MAGIC_STRING(/*e*/"very", KC_Y); return 4; break;      // E -> VERY
+        case KC_F: MAGIC_STRING(/*f*/"urther", KC_R); return 6; break;    // F -> URTHER
+        case KC_G: MAGIC_STRING(/*g*/"eneral", KC_L); return 6; break;    // G -> ENERAL
+        case KC_H: MAGIC_STRING(/*h*/"owever", KC_R); return 6; break;    // H -> OWEVER
+        case KC_I: MAGIC_STRING(/*i*/"ble", KC_E); return 3; break;       // I -> BLE
+        case KC_J: MAGIC_STRING(/*j*/"udge", KC_T); return 4; break;      // J -> UDGE
+        case KC_K: MAGIC_STRING(/*k*/"eep", KC_P); return 3; break;       // K -> EEP
+        case KC_L: MAGIC_STRING(/*l*/"ike", KC_E); return 3; break;       // L -> IKE
+        case KC_M: MAGIC_STRING(/*m*/"anage", KC_E); return 5; break;     // M -> ANAGE
+        case KC_N: MAGIC_STRING(/*n*/"othing", KC_G); return 6; break;    // N -> OTHING
+        case KC_O: MAGIC_STRING(/*o*/"riginal", KC_L); return 7; break;   // O -> RIGINAL
+        case KC_P: MAGIC_STRING(/*p*/"revious", KC_S); return 8; break;   // P -> REVIOUS
+        case KC_Q: tap_code(KC_I); return 1; break;                       // Q -> I
+        case KC_QU: tap_code(KC_I); return 1; break;                      // QU -> I
+        case KC_R: MAGIC_STRING(/*r*/"eview", KC_W); return 5; break;     // R -> EVIEW
+        case KC_S: MAGIC_STRING(/*s*/"hould", KC_D); return 5; break;     // S -> HOULD
+        case KC_T: MAGIC_STRING(/*t*/"hrough", KC_H); return 6; break;    // T -> HROUGH
+        case KC_U: MAGIC_STRING(/*u*/"sual", KC_L); return 4; break;      // U -> SUAL
+        case KC_V: MAGIC_STRING(/*v*/"ersion", KC_N); return 6; break;    // V -> ERSION
+        case KC_W: MAGIC_STRING(/*w*/"hich", KC_H); return 4; break;      // W -> HICH
+        case KC_X: MAGIC_STRING(/*ex*/"ample", KC_E); return 5; break;    // X -> AMPLE  // TODO: make this trigger off ex instead of X?
+        case KC_Y: MAGIC_STRING(/*y*/"esterday", KC_Y); return 8; break;  // Y -> ESTERDAY
+        case KC_Z: MAGIC_STRING(/*z*/"ealous", KC_S); return 6; break;    // Z -> EALOUS
+        case KC_SPC: MAGIC_STRING(/* */"you", KC_U); return 3; break;     // spc -> YOU
         case KC_QUOT:
-        // case KC_DQOT:
+        case KC_DQOT:
             // Shouldn't happen because of auto shift but...
             if ((mods & MOD_MASK_SHIFT) != 0) {
             return 0;
             }
             else {
-            MAGIC_STRING(/*'*/"ve", KC_E); return 2;                // ' -> 'VE  // no other apostrophes longer than 2?
+            MAGIC_STRING(/*'*/"ve", KC_E); return 2;               // ' -> 'VE  // no other apostrophes longer than 2?
             }
+            break; 
         }
     }
     return 0;
@@ -569,7 +588,7 @@ uint16_t get_combo_term(uint16_t index, combo_t *combo) {
         case MAGIC_HOLD_C:
             return COMBO_TERM+50;
         case REP_HOLD_C:
-            return COMBO_TERM+200;
+            return COMBO_TERM+80;
         case MAGIC_REP_HOLD_C:  // fallthroughs intended
         case PREVWD_HOLD_C:
         case NEXTWD_HOLD_C:
@@ -753,6 +772,7 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
         case KC_DQOT:
             if (!shifted) {
                 register_code16(KC_QUOT);
+                set_last_keycode(KC_QUOT);
             }
             else {
                 clear_oneshot_mods();  // Temporarily disable mods.
@@ -769,6 +789,7 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
             else {
                 MAGIC_STRING("Qu", KC_QU);
             }
+            set_last_keycode(KC_QU);
             break;
         default:
             if (shifted) {
@@ -1417,6 +1438,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
+    // Clear magic behaviour
+    if ((magic_length > 0) && timer_expired(timer_read(), magic_timer)) {
+        magic_length = 0;
+    }
+
     switch (keycode) {
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Base Layer Switchers
@@ -1435,17 +1461,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         // MAGIC
         case ALTREP2: 
             if (record->event.pressed) {
-                process_magic_key_2(get_last_keycode(), get_last_mods());
+                magic_length = process_magic_key_2(get_last_keycode(), get_last_mods(), record);
             }
             return false;
         case ALTREP3:
             if (record->event.pressed) {
-                process_magic_key_3(get_last_keycode(), get_last_mods());
+                magic_length = process_magic_key_3(get_last_keycode(), get_last_mods(), record);
             }
             return false;
         case ALTREP4:
             if (record->event.pressed) {
-                process_magic_key_4(get_last_keycode(), get_last_mods());
+                magic_length = process_magic_key_4(get_last_keycode(), get_last_mods(), record);
             }
             return false;
 
@@ -1487,7 +1513,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     case KC_LCBR:
                         tap_code(KC_DEL);
                 }
-                return process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
+                bool bksp_tapped = process_tap_or_long_press_key(record, LCTL(KC_BSPC));  // on long press
+
+                // Backspace Qu
+                // BUG: DOES NOT WORK.
+                if (get_last_keycode() == KC_QU) {
+                    tap_code(KC_BSPC);
+                    tap_code(KC_BSPC);
+                    return false;
+                }
+
+                // Backspace magic
+                if ((magic_length > 0) && bksp_tapped) {
+                    for (; magic_length > 0; magic_length--) {
+                        tap_code(KC_BSPC);
+                    }
+                    magic_length = 0;
+                    return false;
+                }
+
+                return bksp_tapped;
             } else {
                 return true;  // THIS MUST BE TRUE OTHERWISE SHORT BACKSPACE WON'T STOP
             }
@@ -1991,6 +2036,17 @@ void matrix_scan_user(void) {
     // Check for end of select word behaviour
     select_word_task();
     #endif
+
+    #if MAGIC_BKSP_TIMEOUT > 0
+    // // Check for end of magic word backspace behaviour
+    magic_length_task();
+
+    // Check for end of magic word delete behaviour
+    // if (magic_length && (timer_elapsed32(magic_timer) > MAGIC_BKSP_TIMEOUT)) {
+    //     magic_timer = timer_read32();
+    //     magic_length = 0;
+    // }
+    #endif
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 // ---------------------------------------------------------------------------------------------------------
@@ -2306,10 +2362,11 @@ static void print_status_narrow(void) {
     oled_write_P(PSTR("SELWD"), selwd_state != SELWD_STATE_NONE); // select word
     oled_write_P(PSTR("SNCSE"), sentence_state == SNCSE_STATE_ENDING || sentence_state == SNCSE_STATE_PRIMED); // sentence case
     oled_write_P(PSTR("-----"), false);
-    oled_write_P(PSTR(get_u16_str(get_last_keycode(), '0')), false);
+    oled_write_P(PSTR(get_u16_str(magic_timer, '0')), false);
+    oled_write_P(PSTR(get_u16_str(magic_length, '0')), false);
     // oled_write_P(PSTR(get_u8_str(get_alt_repeat_key_keycode(), '0')), false);
     // QMK
-    // render_logo();  // TODO: Get a better logo.
+    // render_logo();
     render_luna(0, 13);
 }
 // static void print_logo_narrow(void) {
