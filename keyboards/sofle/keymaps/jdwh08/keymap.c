@@ -143,7 +143,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_STRDY] = LAYOUT(
-  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8, KC_9PRC,    KC_0,  KC_MINUS,
+  KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                       KC_6,     KC_7,    KC_8,    KC_9,    KC_0,  KC_MINUS,
   KC_GRV,   KC_V,   KC_M,    KC_L,    KC_C,    KC_P,                       KC_B,     KC_H,    KC_U,    KC_O,    KC_QU,  KC_SLSH,
   KC_TAB,   KC_S,   KC_T,    KC_R,    KC_D,    KC_Y,                       KC_F,  QK_AREP,    KC_E,    KC_A,    KC_I,  KC_DQOT,
   KC_LSFT,  KC_X,   KC_K,    KC_J,    KC_G,    KC_W, KC_MUTE,     KC_MPLY, KC_Z,     KC_N, KC_COMM,  KC_DOT, KC_SCLN,  KC_EQUAL,
@@ -694,8 +694,8 @@ bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
         case KC_SAVE:  // C_S(S) save as
         case KC_ATAB: // Alt tab the other way I guess
 
-        case KC_9PRC:  // 9 vs ( macro
-        case KC_CANG: // , vs < macro
+        // case KC_9PRC:  // 9 vs ( macro
+        // case KC_CANG: // , vs < macro
 
         case KC_QU:  // QU vs Q
 
@@ -737,7 +737,7 @@ bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
 }
 void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
     switch(keycode) {
-        case KC_9PRC:
+        case KC_9:
             if (!shifted) {
                 register_code16(KC_9);
             }
@@ -748,27 +748,27 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
                 // unregister_code16(C_LPARN);
                 clear_oneshot_mods();  // Temporarily disable mods.
                 unregister_mods(MOD_MASK_CSAG);
-                SEND_STRING("()");
+                MAGIC_STRING("()", KC_LPRN);
                 tap_code(KC_LEFT);  // move cursor back into ()
-                set_last_keycode(KC_9PRC);
+                set_last_keycode(KC_LPRN);
             }
             break;
-        case KC_CANG:
-            if (!shifted) {
-                register_code16(KC_COMM);
-            }
-            else {
-                // BRACKET MACRO GOES HERE FOR SOME REASON
-                // WON'T WORK IN NORMAL SPOT
-                // register_code16(C_LANGB);
-                // unregister_code16(C_LANGB);
-                clear_oneshot_mods();  // Temporarily disable mods.
-                unregister_mods(MOD_MASK_CSAG);
-                SEND_STRING("<>");
-                tap_code(KC_LEFT);  // move cursor back into ()
-                set_last_keycode(KC_LABK);
-            }
-            break;
+        // case KC_CANG:
+        //     if (!shifted) {
+        //         register_code16(KC_COMM);
+        //     }
+        //     else {
+        //         // BRACKET MACRO GOES HERE FOR SOME REASON
+        //         // WON'T WORK IN NORMAL SPOT
+        //         // register_code16(C_LANGB);
+        //         // unregister_code16(C_LANGB);
+        //         clear_oneshot_mods();  // Temporarily disable mods.
+        //         unregister_mods(MOD_MASK_CSAG);
+        //         SEND_STRING("<>");
+        //         tap_code(KC_LEFT);  // move cursor back into ()
+        //         set_last_keycode(KC_LABK);
+        //     }
+        //     break;
         case KC_DQOT:
             if (!shifted) {
                 register_code16(KC_QUOT);
@@ -801,13 +801,13 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
 }
 void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
     switch(keycode) {
-        case KC_9PRC:
+        case KC_9:
             if (!shifted) {
                 unregister_code16(KC_9);
             }
             else {
                 register_mods(get_mods());
-                set_last_keycode(KC_9PRC);
+                set_last_keycode(KC_LPRN);
             }
             break;
         case KC_CANG:
